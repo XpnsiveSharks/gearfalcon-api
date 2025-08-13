@@ -1,0 +1,20 @@
+/vendor/
+composer.lock
+.env
+
+# logs
+logs/
+*.log
+
+# cache or temp files
+cache/
+tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode/
+.idea/
+*.iml
