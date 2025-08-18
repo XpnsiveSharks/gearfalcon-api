@@ -1,0 +1,10 @@
+# Enable mod_rewrite
+RewriteEngine On
+
+# Prevent access to dotfiles and system files
+RewriteRule (^\.|composer\.json|composer\.lock|vendor/) - [F,L]
+
+# Redirect everything to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
