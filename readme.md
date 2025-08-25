@@ -10,6 +10,9 @@ composer require ramsey/uuid
 ```bash
 composer require psr/container
 ```
+```bash
+composer require vlucas/phpdotenv
+```
 
 
 

@@ -2,13 +2,13 @@
 declare(strict_types=1);
 
 namespace App\Domain\User\Entities;
-//*********************************************************Entity*********************************************************//
+
 final class Profile
 {
     private string $firstName;
     private string $lastName;
     private ?string $middleName;
-    private ?string $avatarUrl; // image example --> $avatarUrl = "https://bucket-name.s3.amazonaws.com/user123.jpg"; (specialized storage not inside db)(CDN for iamge delivery)
+    private ?string $avatarUrl;
 
     public function __construct(
         string $firstName,
@@ -22,51 +22,51 @@ final class Profile
         $this->avatarUrl = $avatarUrl;
     }
 
-    public function getFirstName(): string
-    {
-        return $this->firstName;
-    }
+    // --- Getters ---
+    public function getFirstName(): string { return $this->firstName; }
+    public function getLastName(): string { return $this->lastName; }
+    public function getMiddleName(): ?string { return $this->middleName; }
+    public function getAvatarUrl(): ?string { return $this->avatarUrl; }
 
-    public function getLastName(): string
-    {
-        return $this->lastName;
-    }
-
-    public function getMiddleName(): ?string
-    {
-        return $this->middleName;
-    }
-
-    public function getAvatarUrl(): ?string
-    {
-        return $this->avatarUrl;
-    }
-
-    public function withFirstName(string $firstName): self
-    {
+    // --- Immutable setters ---
+    public function withFirstName(string $firstName): self {
         $clone = clone $this;
         $clone->firstName = $firstName;
         return $clone;
     }
-
-    public function withLastName(string $lastName): self
-    {
+    public function withLastName(string $lastName): self {
         $clone = clone $this;
         $clone->lastName = $lastName;
         return $clone;
     }
-
-    public function withMiddleName(?string $middleName): self
-    {
+    public function withMiddleName(?string $middleName): self {
         $clone = clone $this;
         $clone->middleName = $middleName;
         return $clone;
     }
-
-    public function withAvatarUrl(?string $avatarUrl): self
-    {
+    public function withAvatarUrl(?string $avatarUrl): self {
         $clone = clone $this;
         $clone->avatarUrl = $avatarUrl;
         return $clone;
+    }
+
+    // --- Hydration ---
+    public static function fromArray(array $data): self {
+        return new self(
+            $data['firstName'] ?? '', // support snake_case from DB
+            $data['lastName'] ?? '',
+            $data['middleName'] ?? null,
+            $data['avatarUrl'] ?? null
+        );
+    }
+
+    // --- Dehydration ---
+    public function toArray(): array {
+        return [
+            'firstName' => $this->firstName,
+            'lastName' => $this->lastName,
+            'middleName' => $this->middleName,
+            'avatarUrl' => $this->avatarUrl,
+        ];
     }
 }

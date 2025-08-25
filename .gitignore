@@ -1,6 +1,7 @@
 /vendor/
 composer.lock
 .env
+.env.production
 
 # logs
 logs/
