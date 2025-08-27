@@ -45,11 +45,3 @@ C:\Windows\System32\drivers\etc\hosts with admin rights.
 127.0.0.1   gearfalcon.test
 ```
 4. Restart Apache
-
-
-
-
-
-DI
-
-
