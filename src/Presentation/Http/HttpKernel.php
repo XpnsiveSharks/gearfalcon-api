@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Presentation\Http;
@@ -54,12 +55,19 @@ class HttpKernel
                 break;
 
             case Dispatcher::FOUND:
-                [$class, $method] = $routeInfo[1];
+                $handler = $routeInfo[1];
                 $vars = $routeInfo[2];
 
+                // If handler is a closure
+                if ($handler instanceof \Closure) {
+                    echo $handler(...array_values($vars));
+                    break;
+                }
+
+                // Otherwise assume [ControllerClass, method]
+                [$class, $method] = $handler;
                 $controller = $this->container[$class] ?? new $class();
 
-                // Pass JSON body for POST requests
                 if ($httpMethod === 'POST') {
                     $input = json_decode(file_get_contents('php://input'), true) ?? [];
                     $vars = array_merge($vars, [$input]);
