@@ -1,20 +1,7 @@
-# required to install
-
- - download FastRoute into vendor/
+# requireed to run to install required pacakes
 ```bash
-composer require nikic/fast-route
+composer install
 ````
-```bash
-composer require ramsey/uuid
-```
-```bash
-composer require psr/container
-```
-```bash
-composer require vlucas/phpdotenv
-```
-
-
 
 ## Add vhost to access development through gearfalcon.test
 1. Open Apache config file
