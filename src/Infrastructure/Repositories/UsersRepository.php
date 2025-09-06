@@ -63,7 +63,27 @@ class UsersRepository implements UserRepositoryInterface
         // `null` - the else part of the ternary operator
         return $data ? User::fromArray($data) : null; // ternary operator just like if else 
     }
+    public function findByCredentials(string $email, string $password): ?User
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM users
+            WHERE email = :email
+            AND deleted_at IS NULL
+        ");
+        $stmt->execute(['email' => $email]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        if (!$data) {
+            return null;
+        } //user not found
+
+        if (!password_verify($password, $data['password_hash'])) {
+            return null;
+        } // wrong password
+
+        // Return User entity
+        return User::fromArray($data);
+    }
     // Creates `UPDATE` query for users with a condition (if id from parameter(User) is equal to id from users table) table and returns true is the execution is successful
     // Accepts a user object
     // Returns a boolean
