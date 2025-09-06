@@ -86,7 +86,6 @@ final class User extends Entity
     // ===== Users Credentials =====
     // Value object from -> (Credentials : Domain/User/ValueObjects/Credentials.php)
     // Provides access to the user's credential details.
-    // Updating contact info also refreshes the "last modified" timestamp.
     public function getCredentials(): Credentials
     {
         return $this->credentials;
