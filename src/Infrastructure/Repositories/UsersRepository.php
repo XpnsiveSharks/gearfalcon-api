@@ -9,7 +9,7 @@ use App\Domain\User\Repositories\UserRepositoryInterface;
 class UsersRepository implements UserRepositoryInterface
 {
     private PDO $db;
-     
+
     // construnctor accepts a database connection
     public function __construct(PDO $db)
     {
@@ -23,13 +23,13 @@ class UsersRepository implements UserRepositoryInterface
     {
         $stmt = $this->db->prepare("
             INSERT INTO users 
-                (id, role, first_name, last_name, middle_name, avatar_url,
-                 phone, email, password_hash,
-                 house_number, street, barangay, city, province, region, postal_code)
+                (id, role, is_active, first_name, last_name, middle_name, avatar_url,
+                 phone, email, password_hash, house_number, street, barangay, city, 
+                 province, region, postal_code, created_at, updated_at, deleted_at)
             VALUES 
-                (:id, :role, :first_name, :last_name, :middle_name, :avatar_url,
-                 :phone, :email, :password_hash,
-                 :house_number, :street, :barangay, :city, :province, :region, :postal_code)
+                (:id, :role, :is_active, :first_name, :last_name, :middle_name, :avatar_url,
+                 :phone, :email, :password_hash, :house_number, :street, :barangay, :city, 
+                 :province, :region, :postal_code, :created_at, :updated_at, :deleted_at)
         ");
 
         // `$user->toArray()` a function from Domain/User/Users.php that converts User object to associative array 
@@ -55,7 +55,7 @@ class UsersRepository implements UserRepositoryInterface
     public function findByEmail(string $email): ?User
     {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email AND deleted_at IS NULL");
-        $stmt->execute(['email' => $email]); 
+        $stmt->execute(['email' => $email]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC); // Fetches an associative array (fetches all users related table columns) and store it to `data`
 
         // If data is true is will execute this `User::fromArray($data)`->convert array of data to entity/object if it is false return null
@@ -72,6 +72,7 @@ class UsersRepository implements UserRepositoryInterface
         $stmt = $this->db->prepare("
             UPDATE users SET
                 role = :role,
+                is_active = :is_active,
                 first_name = :first_name,
                 last_name = :last_name,
                 middle_name = :middle_name,
@@ -86,7 +87,9 @@ class UsersRepository implements UserRepositoryInterface
                 province = :province,
                 region = :region,
                 postal_code = :postal_code,
-                updated_at = CURRENT_TIMESTAMP
+                created_at = :created_at,
+                updated_at = CURRENT_TIMESTAMP,
+                deleted_at = :deleted_at,
             WHERE id = :id
         ");
 
