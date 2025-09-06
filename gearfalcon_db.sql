@@ -31,3 +31,6 @@ CREATE TABLE users (
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at      TIMESTAMP NULL DEFAULT NULL
 );
+
+-- New column added in the `users` table
+ALTER TABLE users ADD COLUMN last_login_at DATETIME NULL AFTER password_hash;
