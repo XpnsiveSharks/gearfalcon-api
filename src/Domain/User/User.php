@@ -12,8 +12,9 @@ use App\Domain\User\ValueObjects\Credentials;
 
 //*********************************************************Aggregate Root*********************************************************//
 final class User extends Entity
-{
-    private string $role;
+{ 
+    // private properties
+    private string $role; 
     private Profile $profile;
     private ContactInfo $contactInfo;
     private Credentials $credentials;
@@ -36,6 +37,9 @@ final class User extends Entity
         $this->isActive = true;
     }
 
+    // ===== User Role =====
+    // Defines and validates the user's role within the system.
+    // Allowed roles: Customer, Technician, Admin.
     public function getRole(): string
     {
         return $this->role;
@@ -44,34 +48,45 @@ final class User extends Entity
     public function setRole(string $role): void
     {
         $validRoles = ['Customer', 'Technician', 'Admin'];
+        // checks if the role from parameter is a valid role
         if (!in_array($role, $validRoles, true)) {
-            throw new \InvalidArgumentException("Invalid role: $role");
+            throw new \InvalidArgumentException("Invalid role: $role"); // yh
         }
         $this->role = $role;
     }
-
+    // ===== User Profile =====
+    // Entity from -> (Profile : Domain/User/ValueObjects/Profile.php)
+    // Provides access to the user's profile data.
+    // Updating the profile also refreshes the "last modified" timestamp.
     public function getProfile(): Profile
     {
         return $this->profile;
     }
-
+ 
     public function updateProfile(Profile $profile): void
     {
         $this->profile = $profile;
-        $this->touch();
+        $this->touch(); // refresh lastModifiedAtUtc (from Domain/Common/Entity.php)
     }
 
+    // ===== Contact Information =====
+    // Value object from -> (ContactInfo : Domain/User/ValueObjects/ContactInfo.php)
+    // Provides access to the user's contact details.
+    // Updating contact info also refreshes the "last modified" timestamp.
     public function getContactInfo(): ContactInfo
     {
         return $this->contactInfo;
     }
-
     public function updateContactInfo(ContactInfo $contactInfo): void
     {
         $this->contactInfo = $contactInfo;
-        $this->touch();
+        $this->touch(); // refresh lastModifiedAtUtc (from Domain/Common/Entity.php)
     }
 
+    // ===== Users Credentials =====
+    // Value object from -> (Credentials : Domain/User/ValueObjects/Credentials.php)
+    // Provides access to the user's credential details.
+    // Updating contact info also refreshes the "last modified" timestamp.
     public function getCredentials(): Credentials
     {
         return $this->credentials;
@@ -80,9 +95,13 @@ final class User extends Entity
     public function updateCredentials(Credentials $credentials): void
     {
         $this->credentials = $credentials;
-        $this->touch();
+        $this->touch(); // refresh lastModifiedAtUtc (from Domain/Common/Entity.php)
     }
 
+    // ===== Users Address =====
+    // Value object from -> (Address : Domain/User/ValueObjects/Address.php)
+    // Provides access to the user's address details.
+    // Updating contact info also refreshes the "last modified" timestamp.
     public function getAddress(): Address
     {
         return $this->address;
@@ -91,32 +110,38 @@ final class User extends Entity
     public function updateAddress(Address $address): void
     {
         $this->address = $address;
-        $this->touch();
+        $this->touch(); // refresh lastModifiedAtUtc (from Domain/Common/Entity.php)
     }
 
+    // ===== Activation State =====
+    // Controls whether the user is active or inactive.
+    // State changes automatically refresh the "last modified" timestamp.
     public function deactivate(): void
     {
         $this->isActive = false;
-        $this->touch();
+        $this->touch(); // refresh lastModifiedAtUtc (from Domain/Common/Entity.php)
     }
 
     public function activate(): void
     {
         $this->isActive = true;
-        $this->touch();
+        $this->touch(); // refresh lastModifiedAtUtc (from Domain/Common/Entity.php)
     }
 
     public function isActive(): bool
     {
         return $this->isActive;
     }
-
+    
     // -----------------------------
     // HYDRATION
     // -----------------------------
+    // Reconstructs a User aggregate from a database row (associative array).
+    // - Delegates hydration of value objects (Profile, ContactInfo, Credentials, Address)
+    // - Handles both hashed and plain-text password inputs
+    // - Applies optional fields if present (id, is_active, timestamps)
     public static function fromArray(array $data): self
     {
-        // --- Hydrate nested value objects safely ---
         $profile = Profile::fromArray($data['profile'] ?? []);
         $contactInfo = ContactInfo::fromArray($data['contactInfo'] ?? []);
 
@@ -170,9 +195,14 @@ final class User extends Entity
 
 
 
+  
     // -----------------------------
     // DEHYDRATION
     // -----------------------------
+    // Prepares the User aggregate for persistence in the repository.
+    // - Converts nested value objects into scalar fields
+    // - Formats timestamps for storage (Y-m-d H:i:s in UTC)
+    // - Returns null for deleted_at if not set
     public function toArray(): array
     {
         return [
