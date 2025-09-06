@@ -24,11 +24,11 @@ class UsersRepository implements UserRepositoryInterface
         $stmt = $this->db->prepare("
             INSERT INTO users 
                 (id, role, is_active, first_name, last_name, middle_name, avatar_url,
-                 phone, email, password_hash, house_number, street, barangay, city, 
+                 phone, email, password_hash, last_login_at, house_number, street, barangay, city, 
                  province, region, postal_code, created_at, updated_at, deleted_at)
             VALUES 
                 (:id, :role, :is_active, :first_name, :last_name, :middle_name, :avatar_url,
-                 :phone, :email, :password_hash, :house_number, :street, :barangay, :city, 
+                 :phone, :email, :password_hash, :last_login_at, :house_number, :street, :barangay, :city, 
                  :province, :region, :postal_code, :created_at, :updated_at, :deleted_at)
         ");
 
@@ -100,6 +100,7 @@ class UsersRepository implements UserRepositoryInterface
                 phone = :phone,
                 email = :email,
                 password_hash = :password_hash,
+                last_login_at = :last_login_at,
                 house_number = :house_number,
                 street = :street,
                 barangay = :barangay,
