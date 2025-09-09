@@ -36,6 +36,7 @@ class PromotionService
        // Create a technician profile linked to the user, including optional fields like experience years.
         return $this->technicianRepository->create([
             'user_id' => $userId,
+            'specialization' => $technicianData['specialization'] ?? null,
             'experience_years' => $technicianData['experience_years'] ?? null,
         ]);
     }
