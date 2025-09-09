@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Presentation\Http;
 
+use App\Presentation\Http\Middleware\AuthMiddleware;
 use FastRoute\Dispatcher;
-use FastRoute\RouteCollector;
-use App\Presentation\Http\Middleware\CorsMiddleware;
+use App\Presentation\Middleware\CorsMiddleware;
 
 class HttpKernel
 {
@@ -23,16 +23,26 @@ class HttpKernel
 
     public function handle(): void
     {
-        
+        $request = [
+            'server' => $_SERVER,
+            'headers' => getallheaders()
+        ];
+        //===================CorsMiddleware=====================//
         // This runs the CorsMiddleware: it adds CORS headers. 
-        // Currently configured with '*' → which allows requests from any origin. 
-        // # TO DO : Specify origin that matches our frontend origin
         if (isset($this->container[CorsMiddleware::class])) {
             $middleware = $this->container[CorsMiddleware::class];
             if (is_callable($middleware)) {
                 $middleware = $middleware();
             }
             $middleware->handle();
+        }
+        //====================AuthMiddleware======================//
+        if (isset($this->container[AuthMiddleware::class])) {
+            $middleware = $this->container[AuthMiddleware::class];
+            if (is_callable($middleware)) {
+                $middleware = $middleware();
+            }
+            $middleware->handle($request, fn($req) => null);
         }
 
         // Get HTTP method and URI
@@ -45,7 +55,7 @@ class HttpKernel
 
         // Dispatch the request
         // Asks FastRoute’s dispatcher to match the request against routing table (routes.php the one that we are passing from the constructor of this class)
-        $routeInfo = $this->dispatcher->dispatch($httpMethod, $uri); 
+        $routeInfo = $this->dispatcher->dispatch($httpMethod, $uri);
 
         switch ($routeInfo[0]) {
             // Dispatcher::NOT_FOUND → no route matched.
@@ -59,7 +69,7 @@ class HttpKernel
                 http_response_code(405);
                 echo "405 - Method Not Allowed";
                 break;
-            
+
             // Dispatcher::FOUND → route matched, along with the handler + parameters.
             case Dispatcher::FOUND:
                 $handler = $routeInfo[1]; // $handler = either a closure or [ControllerClass, method].
