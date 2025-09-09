@@ -1,0 +1,247 @@
+{
+  "info": {
+    "name": "GearFalcon API",
+    "description": "Postman collection for GearFalcon API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Welcome",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://gearfalcon.test/",
+          "protocol": "http",
+          "host": ["gearfalcon", "test"]
+        }
+      }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"secret\"\n}"
+            },
+            "url": {
+              "raw": "http://gearfalcon.test/auth/login",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"secret\"\n}"
+            },
+            "url": {
+              "raw": "http://gearfalcon.test/auth/register",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://gearfalcon.test/auth/logout",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quotes",
+      "item": [
+        {
+          "name": "Create Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"Plumbing\",\n  \"description\": \"Fix leaking pipe\"\n}"
+            },
+            "url": {
+              "raw": "http://gearfalcon.test/quotes",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["quotes"]
+            }
+          }
+        },
+        {
+          "name": "Accept Quote",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://gearfalcon.test/quotes/1/accept",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["quotes", "1", "accept"]
+            }
+          }
+        },
+        {
+          "name": "Reject Quote",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://gearfalcon.test/quotes/1/reject",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["quotes", "1", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Active Quotes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://gearfalcon.test/quotes/active",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["quotes", "active"]
+            }
+          }
+        },
+        {
+          "name": "Customer Quotes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://gearfalcon.test/customers/1/quotes",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["customers", "1", "quotes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Promote Technician",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://gearfalcon.test/admin/technicians/promote",
+              "protocol": "http",
+              "host": ["gearfalcon", "test"],
+              "path": ["admin", "technicians", "promote"]
+            }
+          }
+        },
+        {
+          "name": "Categories",
+          "item": [
+            {
+              "name": "List Categories",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "http://gearfalcon.test/admin/categories",
+                  "protocol": "http",
+                  "host": ["gearfalcon", "test"],
+                  "path": ["admin", "categories"]
+                }
+              }
+            },
+            {
+              "name": "Create Category",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Plumbing\"\n}"
+                },
+                "url": {
+                  "raw": "http://gearfalcon.test/admin/categories",
+                  "protocol": "http",
+                  "host": ["gearfalcon", "test"],
+                  "path": ["admin", "categories"]
+                }
+              }
+            },
+            {
+              "name": "Update Category",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Plumbing\"\n}"
+                },
+                "url": {
+                  "raw": "http://gearfalcon.test/admin/categories/1",
+                  "protocol": "http",
+                  "host": ["gearfalcon", "test"],
+                  "path": ["admin", "categories", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Category (Soft)",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "http://gearfalcon.test/admin/categories/1",
+                  "protocol": "http",
+                  "host": ["gearfalcon", "test"],
+                  "path": ["admin", "categories", "1"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
