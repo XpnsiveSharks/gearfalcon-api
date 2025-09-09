@@ -3,12 +3,37 @@ namespace App\Infrastructure;
 
 use Dotenv\Dotenv;
 use App\Infrastructure\Database\Database;
-use App\Infrastructure\Repositories\UsersRepository;
-use App\Infrastructure\Database\UnitOfWork;
-use App\Application\User\RegisterUserHandler;
-use App\Presentation\Http\Controllers\HomeController;
-use App\Presentation\Http\Controllers\UserController;
-use App\Presentation\Http\Middleware\CorsMiddleware;
+
+// Models
+use App\Infrastructure\Models\User;
+use App\Infrastructure\Models\Cart;
+use App\Infrastructure\Models\Customer;
+use App\Infrastructure\Models\Quote;
+use App\Infrastructure\Models\Job;
+use App\Infrastructure\Models\Technician;
+
+// Repositories
+use App\Infrastructure\Repositories\UserRepository;
+use App\Infrastructure\Repositories\CustomerRepository;
+use App\Infrastructure\Repositories\CartRepository;
+use App\Infrastructure\Repositories\QuoteRepository;
+use App\Infrastructure\Repositories\JobRepository;
+use App\Infrastructure\Repositories\TechnicianRepository;
+
+// Services
+use App\Application\Services\UserRegistrationService;
+use App\Application\Customer\Services\CustomerRegistrationService;
+use App\Application\Services\AuthService;
+use App\Application\Services\QuoteService;
+use App\Application\Admin\Services\PromotionService;
+
+// Controllers
+use App\Presentation\Controllers\AuthController;
+use App\Presentation\Controllers\QuoteController;
+use App\Presentation\Controllers\TechnicianController;
+
+// Middleware
+use App\Presentation\Middleware\CorsMiddleware;
 
 // Load .env
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../../', '.env.development');
@@ -26,32 +51,37 @@ $dbConfig = [
 
 // Initialize Database wrapper
 $database = new Database($dbConfig);
-$pdo = $database->getConnection();
+$pdo = $database->getCapsule();
 
-// Initialize repository
-$usersRepository = new UsersRepository($pdo);
+// Initialize repositories
+$userRepository = new UserRepository(new User);
+$customerRepository = new CustomerRepository(new Customer);
+$cartRepository = new CartRepository(new Cart);
+$quoteRepository = new QuoteRepository(new Quote);
+$jobRepository = new JobRepository(new Job);
+$technicianRepository = new TechnicianRepository(new Technician);
 
-// Unit of Work
-$unitOfWork = new UnitOfWork($pdo);
-
-// Handlers / Services
-$registerUserHandler = new RegisterUserHandler($usersRepository, $unitOfWork);
+// Services
+$userRegistrationService = new UserRegistrationService($userRepository);
+$customerRegistrationService = new CustomerRegistrationService($userRegistrationService, $customerRepository);
+$authService = new AuthService($userRepository);
+$quoteService = new QuoteService($quoteRepository, $jobRepository);
+$promotionService = new PromotionService($userRepository, $technicianRepository);
 
 // Middleware
-$corsMiddleware = new CorsMiddleware([
-    'http://localhost:3000', // frontend URL
-    'http://example.com',    // additional origins if needed
-]);
-
+$corsMiddleware = new CorsMiddleware();
+ 
 // Controllers
-$homeController = new HomeController($registerUserHandler);
-$userController = new UserController($registerUserHandler);
+$authController = new AuthController($authService, $userRegistrationService);
+$quoteController = new QuoteController($quoteService);
+$technicianController = new TechnicianController($promotionService);
 
 // DI Container
 $container = [
     CorsMiddleware::class => $corsMiddleware,
-    HomeController::class => $homeController,
-    UserController::class => $userController,
+    AuthController::class => $authController,
+    QuoteController::class => $quoteController,
+    'App\Presentation\Controllers\TechnicianController' => $technicianController,
 ];
 
 return $container;
