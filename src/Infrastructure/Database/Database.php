@@ -1,32 +1,31 @@
 <?php
 namespace App\Infrastructure\Database;
 
-use PDO;
-use PDOException;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class Database
 {
-    private PDO $connection;
+    private Capsule $capsule;
 
     public function __construct(array $config)
     {
-        $dsn = sprintf(
-            'mysql:host=%s;dbname=%s;charset=%s',
-            $config['host'],
-            $config['dbname'],
-            $config['charset'] ?? 'utf8mb4'
-        );
+        $this->capsule = new Capsule;
+        $this->capsule->addConnection([
+            'driver'    => $config['driver'] ?? 'mysql',
+            'host'      => $config['host'],
+            'database'  => $config['dbname'],
+            'username'  => $config['user'],
+            'password'  => $config['password'],
+            'charset'   => $config['charset'] ?? 'utf8mb4',
+            'collation' => $config['collation'] ?? 'utf8mb4_unicode_ci',
+        ]);
 
-        try {
-            $this->connection = new PDO($dsn, $config['user'], $config['password']);
-            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $e) {
-            die("Database connection failed: " . $e->getMessage());
-        }
+        $this->capsule->setAsGlobal();
+        $this->capsule->bootEloquent();
     }
 
-    public function getConnection(): PDO
+    public function getCapsule(): Capsule
     {
-        return $this->connection;
+        return $this->capsule;
     }
 }
