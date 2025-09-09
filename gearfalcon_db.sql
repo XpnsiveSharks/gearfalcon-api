@@ -13,7 +13,7 @@ CREATE TABLE users (
 -- CUSTOMERS
 CREATE TABLE customers (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id VARCHAR(50) UNIQUE, -- FK → users.id
+  user_id CHAR(36) UNIQUE, -- FK → users.id
   company_name VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -40,7 +40,7 @@ CREATE TABLE customer_addresses (
 -- TECHNICIANS
 CREATE TABLE technicians (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id VARCHAR(50) UNIQUE, -- FK → users.id
+  user_id CHAR(36) UNIQUE, -- FK → users.id
   specialization VARCHAR(255),
   certification TEXT,
   experience_years INT,
