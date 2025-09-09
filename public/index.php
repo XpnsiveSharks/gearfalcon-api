@@ -10,7 +10,7 @@ use FastRoute\RouteCollector;
 $container = require __DIR__ . '/../src/Infrastructure/Container.php';
 
 // Routes closure (function)
-$routesDefinition = require __DIR__ . '/../src/Presentation/Http/Routes/routes.php';
+$routesDefinition = require __DIR__ . '/../src/Presentation/Routes/routes.php';
 
 // Initialize kernel
 $kernel = new HttpKernel($container, $routesDefinition);
