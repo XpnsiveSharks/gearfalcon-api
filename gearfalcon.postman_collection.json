@@ -54,7 +54,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"secret\"\n}"
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"secret\",\n  \"phone\": \"09123476453\"\n}"
             },
             "url": {
               "raw": "http://gearfalcon.test/auth/register",
@@ -78,6 +78,9 @@
         }
       ]
     },
+    
+
+    
     {
       "name": "Quotes",
       "item": [
@@ -160,6 +163,16 @@
           "name": "Promote Technician",
           "request": {
             "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"8b64c935-5151-4450-9412-821549f1d57a\",\n  \"specialization\": \"Plumbing\",\n  \"experience\": 5\n}"
+            },
             "url": {
               "raw": "http://gearfalcon.test/admin/technicians/promote",
               "protocol": "http",
