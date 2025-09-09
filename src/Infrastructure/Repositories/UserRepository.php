@@ -3,6 +3,7 @@ namespace App\Infrastructure\Repositories;
 
 use App\Infrastructure\Models\User;
 
+use Ramsey\Uuid\Uuid;
 /**
  * Class UserRepository
  *
@@ -22,6 +23,13 @@ class UserRepository extends Repository
         parent::__construct($model);
     }
 
+    public function create(array $data): User
+    {
+        if (empty($data['id'])) {
+            $data['id'] = Uuid::uuid4()->toString();
+        }
+        return parent::create($data);
+    }
     /**
      * Find a user by email.
      *
