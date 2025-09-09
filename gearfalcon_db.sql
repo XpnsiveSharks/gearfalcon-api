@@ -1,6 +1,6 @@
 -- USERS
 CREATE TABLE users (
-  id VARCHAR(255) PRIMARY KEY, -- string user id (UUID/custom)
+  id CHAR(36) PRIMARY KEY, -- string user id (UUID/custom)
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL, -- hashed password
@@ -164,3 +164,4 @@ CREATE TABLE quotes (
   FOREIGN KEY (customer_address_id) REFERENCES customer_addresses(id) ON DELETE CASCADE,
   FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE SET NULL
 );
+
