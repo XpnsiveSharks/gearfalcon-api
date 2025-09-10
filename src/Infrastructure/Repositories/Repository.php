@@ -70,7 +70,16 @@ abstract class Repository
     {
         return $this->model->all();
     }
-
+     /**
+     * Find records where a given column is NULL.
+     *
+     * @param string $column
+     * @return \Illuminate\Support\Collection
+     */
+    public function findWhereNull(string $column): \Illuminate\Support\Collection
+    {
+        return $this->model->whereNull($column)->get();
+    }
     /**
      * Create a new record.
      *
@@ -109,4 +118,5 @@ abstract class Repository
         $record = $this->findById($id);
         return $record ? $record->delete() : false;
     }
+   
 }
