@@ -15,3 +15,4 @@ return function(RouteCollector $r) {
     // Parameterized routes
     $r->addRoute('GET', '/users/{id}', [UserController::class, 'show']);
 };
+    

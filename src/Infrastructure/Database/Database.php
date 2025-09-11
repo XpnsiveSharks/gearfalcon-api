@@ -8,8 +8,17 @@ class Database
 {
     private PDO $connection;
 
-    public function __construct(array $config)
+    public function __construct()
     {
+        // Hardcoded config values
+        $config = [
+            'host' => 'localhost',
+            'dbname' => 'gearfalcon_db',
+            'user' => 'root',
+            'password' => '',
+            'charset' => 'utf8mb4'
+        ];
+
         $dsn = sprintf(
             'mysql:host=%s;dbname=%s;charset=%s',
             $config['host'],
