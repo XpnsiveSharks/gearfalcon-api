@@ -15,20 +15,38 @@ class UsersRepository implements UserRepositoryInterface
         $this->db = $db;
     }
 
-    public function create(User $user): bool
+    public function create(\app\domain\User\User $user): void
     {
-        $stmt = $this->db->prepare("
-            INSERT INTO users 
-                (id, role, first_name, last_name, middle_name, avatar_url,
-                 phone, email, password_hash,
-                 house_number, street, barangay, city, province, region, postal_code)
-            VALUES 
-                (:id, :role, :first_name, :last_name, :middle_name, :avatar_url,
-                 :phone, :email, :password_hash,
-                 :house_number, :street, :barangay, :city, :province, :region, :postal_code)
-        ");
+    $sql = "INSERT INTO users (
+        role, is_active, first_name, last_name, middle_name, avatar_url, phone, email, password_hash,
+        house_number, street, barangay, city, province, region, postal_code, created_at, updated_at, deleted_at
+    ) VALUES (
+        :role, :is_active, :first_name, :last_name, :middle_name, :avatar_url, :phone, :email, :password_hash,
+        :house_number, :street, :barangay, :city, :province, :region, :postal_code, :created_at, :updated_at, :deleted_at
+    )";
 
-        return $stmt->execute($user->toArray());
+    $stmt = $this->db->prepare($sql); // <-- FIXED LINE
+    $stmt->execute([
+        ':role' => $user->getRole(),
+        ':is_active' => $user->isActive(),
+        ':first_name' => $user->getFirstName(),
+        ':last_name' => $user->getLastName(),
+        ':middle_name' => $user->getMiddleName(),
+        ':avatar_url' => $user->getAvatarUrl(),
+        ':phone' => $user->getPhone(),
+        ':email' => $user->getEmail(),
+        ':password_hash' => $user->getPasswordHash(),
+        ':house_number' => $user->getHouseNumber(),
+        ':street' => $user->getStreet(),
+        ':barangay' => $user->getBarangay(),
+        ':city' => $user->getCity(),
+        ':province' => $user->getProvince(),
+        ':region' => $user->getRegion(),
+        ':postal_code' => $user->getPostalCode(),
+        ':created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
+        ':updated_at' => $user->getUpdatedAt() ? $user->getUpdatedAt()->format('Y-m-d H:i:s') : null,
+        ':deleted_at' => $user->getDeletedAt() ? $user->getDeletedAt()->format('Y-m-d H:i:s') : null,
+    ]);
     }
 
     public function findById(string $id): ?User
