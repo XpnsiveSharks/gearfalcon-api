@@ -1,31 +1,29 @@
--- USERS (step 1: register with email + password)
+-- USERS
 CREATE TABLE users (
-  id CHAR(36) PRIMARY KEY, -- UUID
+  id CHAR(36) PRIMARY KEY, -- string user id (UUID/custom)
+  name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL, -- hashed password
-  role ENUM('admin','customer','technician') NOT NULL DEFAULT 'customer',
-  name VARCHAR(255) NULL, -- optional at first, can be filled later
-  phone VARCHAR(50) NULL,
+  role ENUM('admin','customer','technician') NOT NULL,
+  phone VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL
 );
-
--- CUSTOMERS (step 2: complete profile after login)
+-- CUSTOMERS
 CREATE TABLE customers (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id CHAR(36) UNIQUE NOT NULL, -- FK → users.id
-  company_name VARCHAR(255) NULL,
+  user_id CHAR(36) UNIQUE, -- FK → users.id
+  company_name VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
 -- CUSTOMER ADDRESSES
 CREATE TABLE customer_addresses (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  customer_id BIGINT NOT NULL, -- FK → customers.id
+  customer_id BIGINT, -- FK → customers.id
   house_number VARCHAR(20) NOT NULL,
   street VARCHAR(100) NOT NULL,
   barangay VARCHAR(100) NOT NULL,
@@ -39,11 +37,10 @@ CREATE TABLE customer_addresses (
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
-
 -- TECHNICIANS
 CREATE TABLE technicians (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id CHAR(36) UNIQUE NOT NULL, -- FK → users.id
+  user_id CHAR(36) UNIQUE, -- FK → users.id
   specialization VARCHAR(255),
   certification TEXT,
   experience_years INT,
@@ -52,7 +49,6 @@ CREATE TABLE technicians (
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
 -- SKILLS
 CREATE TABLE skills (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -62,19 +58,17 @@ CREATE TABLE skills (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL
 );
-
 -- TECHNICIAN SKILLS (many-to-many)
 CREATE TABLE technician_skills (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  technician_id BIGINT NOT NULL, -- FK → technicians.id
-  skill_id BIGINT NOT NULL, -- FK → skills.id
+  technician_id BIGINT, -- FK → technicians.id
+  skill_id BIGINT, -- FK → skills.id
   proficiency ENUM('beginner','intermediate','expert') DEFAULT 'intermediate',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (technician_id) REFERENCES technicians(id) ON DELETE CASCADE,
-  FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE,
-  UNIQUE (technician_id, skill_id) -- prevent duplicates
+  FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
 
 -- SERVICE CATEGORIES
@@ -90,7 +84,7 @@ CREATE TABLE service_categories (
 -- SERVICES
 CREATE TABLE services (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  category_id BIGINT NOT NULL, -- FK → service_categories.id
+  category_id BIGINT, -- FK → service_categories.id
   name VARCHAR(255) NOT NULL,
   description TEXT,
   base_price DECIMAL(10,2) DEFAULT 0.00,
@@ -103,7 +97,7 @@ CREATE TABLE services (
 -- CARTS
 CREATE TABLE carts (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  customer_id BIGINT NOT NULL, -- FK → customers.id
+  customer_id BIGINT, -- FK → customers.id
   status ENUM('active','checked_out','abandoned') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -114,8 +108,8 @@ CREATE TABLE carts (
 -- CART ITEMS
 CREATE TABLE cart_items (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  cart_id BIGINT NOT NULL, -- FK → carts.id
-  service_id BIGINT NOT NULL, -- FK → services.id
+  cart_id BIGINT, -- FK → carts.id
+  service_id BIGINT, -- FK → services.id
   quantity INT DEFAULT 1,
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -128,9 +122,9 @@ CREATE TABLE cart_items (
 -- JOBS
 CREATE TABLE jobs (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  customer_id BIGINT NOT NULL, -- FK → customers.id
-  customer_address_id BIGINT NOT NULL, -- FK → customer_addresses.id
-  service_id BIGINT NOT NULL, -- FK → services.id
+  customer_id BIGINT, -- FK → customers.id
+  customer_address_id BIGINT, -- FK → customer_addresses.id
+  service_id BIGINT, -- FK → services.id
   cart_id BIGINT NULL, -- FK → carts.id
   status ENUM('pending','in_progress','completed','cancelled') DEFAULT 'pending',
   scheduled_date DATE,
@@ -148,16 +142,13 @@ CREATE TABLE jobs (
 -- JOB ASSIGNMENTS (jobs ↔ technicians)
 CREATE TABLE job_assignments (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  job_id BIGINT NOT NULL, -- FK → jobs.id
-  technician_id BIGINT NOT NULL, -- FK → technicians.id
+  job_id BIGINT, -- FK → jobs.id
+  technician_id BIGINT, -- FK → technicians.id
   assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
-  FOREIGN KEY (technician_id) REFERENCES technicians(id) ON DELETE CASCADE,
-  UNIQUE (job_id, technician_id) -- prevent duplicate assignments
+  FOREIGN KEY (technician_id) REFERENCES technicians(id) ON DELETE CASCADE
 );
-
--- QUOTES
 CREATE TABLE quotes (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   customer_id BIGINT NOT NULL,
@@ -173,3 +164,4 @@ CREATE TABLE quotes (
   FOREIGN KEY (customer_address_id) REFERENCES customer_addresses(id) ON DELETE CASCADE,
   FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE SET NULL
 );
+
