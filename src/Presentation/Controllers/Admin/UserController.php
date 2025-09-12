@@ -1,9 +1,9 @@
 <?php
-namespace App\Presentation\Controllers;
+namespace App\Presentation\Controllers\Admin;
 
 use App\Application\Admin\Services\PromotionService;
 
-class TechnicianController
+class UserController
 {
     private PromotionService $promotionService;
 

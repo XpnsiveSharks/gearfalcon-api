@@ -1,7 +1,8 @@
 <?php
 use App\Presentation\Controllers\AuthController;
-use App\Presentation\Controllers\QuoteController;
-use App\Presentation\Controllers\TechnicianController;
+use App\Presentation\Controllers\Customer\QuoteController;
+use App\Presentation\Controllers\Admin\UserController;
+use App\Presentation\Controllers\Admin\AdminController;
 use FastRoute\RouteCollector;
 
 return function(RouteCollector $r) {
@@ -11,17 +12,34 @@ return function(RouteCollector $r) {
     });
 
     // Auth routes
-    $r->addRoute('POST', '/auth/login', [AuthController::class, 'login']);
-    $r->addRoute('POST', '/auth/register', [AuthController::class, 'register']);
-    $r->addRoute('POST', '/auth/logout', [AuthController::class, 'logout']);
+    $r->addGroup('/auth', function (RouteCollector $r) {
+        $r->addRoute('POST', '/login', [AuthController::class, 'login']);
+        $r->addRoute('POST', '/register', [AuthController::class, 'register']);
+        $r->addRoute('POST', '/logout', [AuthController::class, 'logout']);
+    });
 
     // Quote routes
-    $r->addRoute('POST', '/quotes', [QuoteController::class, 'create']);               // create a quote
-    $r->addRoute('POST', '/quotes/{id:\d+}/accept', [QuoteController::class, 'accept']); // accept a quote
-    $r->addRoute('POST', '/quotes/{id:\d+}/reject', [QuoteController::class, 'reject']); // reject a quote
-    $r->addRoute('GET', '/customers/{id:\d+}/quotes', [QuoteController::class, 'getByCustomer']); // get all quotes by customer
-    $r->addRoute('GET', '/quotes/active', [QuoteController::class, 'getActive']);       // list all active quotes
+    $r->addGroup('/quotes', function (RouteCollector $r) {
+        $r->addRoute('POST', '', [QuoteController::class, 'create']);                // create a quote
+        $r->addRoute('POST', '/{id:\d+}/accept', [QuoteController::class, 'accept']); // accept a quote
+        $r->addRoute('POST', '/{id:\d+}/reject', [QuoteController::class, 'reject']); // reject a quote
+        $r->addRoute('GET', '/active', [QuoteController::class, 'getActive']);        // list all active quotes
+    });
 
-    // Technician routes (admin only)
-    $r->addRoute('POST', '/admin/technicians/promote', [TechnicianController::class, 'promote']);
+    // Customer quotes
+    $r->addRoute('GET', '/customers/{id:\d+}/quotes', [QuoteController::class, 'getByCustomer']);
+
+    // Admin routes
+    $r->addGroup('/admin', function (RouteCollector $r) {
+        // Technician routes
+        $r->addRoute('POST', '/technicians/promote', [UserController::class, 'promote']);
+
+        // Service Category routes
+        $r->addGroup('/categories', function (RouteCollector $r) {
+            $r->addRoute('GET', '', [AdminController::class, 'index']);          // list categories
+            $r->addRoute('POST', '', [AdminController::class, 'store']);         // create category
+            $r->addRoute('PUT', '/{id:\d+}', [AdminController::class, 'update']); // update category
+            $r->addRoute('DELETE', '/{id:\d+}', [AdminController::class, 'destroy']); // soft delete category
+        });
+    });
 };
