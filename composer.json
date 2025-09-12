@@ -10,6 +10,10 @@
     {
       "name": "XpnsiveSharks",
       "email": "aban.marynelle.tesoro@gmail.com"
+    },
+    {
+      "name": "GABlane",
+      "email": "ofiangga.bscs@gmail.com"
     }
   ],
   "require": {
@@ -18,6 +22,6 @@
     "ramsey/uuid": "^4.9",
     "vlucas/phpdotenv": "^5.6",
     "firebase/php-jwt": "6.10",
-    "illuminate/database": "^12.28"
+    "illuminate/database": "^9.0"
   }
 }
