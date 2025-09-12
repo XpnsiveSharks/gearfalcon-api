@@ -15,38 +15,48 @@ class UsersRepository implements UserRepositoryInterface
         $this->db = $db;
     }
 
-    public function create(\app\domain\User\User $user): void
-    {
-    $sql = "INSERT INTO users (
-        role, is_active, first_name, last_name, middle_name, avatar_url, phone, email, password_hash,
-        house_number, street, barangay, city, province, region, postal_code, created_at, updated_at, deleted_at
-    ) VALUES (
-        :role, :is_active, :first_name, :last_name, :middle_name, :avatar_url, :phone, :email, :password_hash,
-        :house_number, :street, :barangay, :city, :province, :region, :postal_code, :created_at, :updated_at, :deleted_at
-    )";
+    /**
+     * Create a new user.
+     *
+     * @param \App\Domain\User\User $user
+     * @return void
+     */
 
-    $stmt = $this->db->prepare($sql); // <-- FIXED LINE
-    $stmt->execute([
-        ':role' => $user->getRole(),
-        ':is_active' => $user->isActive(),
-        ':first_name' => $user->getFirstName(),
-        ':last_name' => $user->getLastName(),
-        ':middle_name' => $user->getMiddleName(),
-        ':avatar_url' => $user->getAvatarUrl(),
-        ':phone' => $user->getPhone(),
-        ':email' => $user->getEmail(),
-        ':password_hash' => $user->getPasswordHash(),
-        ':house_number' => $user->getHouseNumber(),
-        ':street' => $user->getStreet(),
-        ':barangay' => $user->getBarangay(),
-        ':city' => $user->getCity(),
-        ':province' => $user->getProvince(),
-        ':region' => $user->getRegion(),
-        ':postal_code' => $user->getPostalCode(),
-        ':created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
-        ':updated_at' => $user->getUpdatedAt() ? $user->getUpdatedAt()->format('Y-m-d H:i:s') : null,
-        ':deleted_at' => $user->getDeletedAt() ? $user->getDeletedAt()->format('Y-m-d H:i:s') : null,
-    ]);
+    public function create(User $user): bool
+    {
+        // Use the aggregate's toArray() to get DB-ready fields
+        $data = $user->toArray();
+
+        $sql = "INSERT INTO users (
+            role, is_active, first_name, last_name, middle_name, avatar_url, phone, email, password_hash,
+            house_number, street, barangay, city, province, region, postal_code, created_at, updated_at, deleted_at
+        ) VALUES (
+            :role, :is_active, :first_name, :last_name, :middle_name, :avatar_url, :phone, :email, :password_hash,
+            :house_number, :street, :barangay, :city, :province, :region, :postal_code, :created_at, :updated_at, :deleted_at
+        )";
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':role' => $data['role'] ?? 'Customer',
+            ':is_active' => ($data['is_active'] ?? true) ? 1 : 0,
+            ':first_name' => $data['first_name'] ?? null,
+            ':last_name' => $data['last_name'] ?? null,
+            ':middle_name' => $data['middle_name'] ?? null,
+            ':avatar_url' => $data['avatar_url'] ?? null,
+            ':phone' => $data['phone'] ?? null,
+            ':email' => $data['email'] ?? null,
+            ':password_hash' => $data['password_hash'] ?? null,
+            ':house_number' => $data['house_number'] ?? null,
+            ':street' => $data['street'] ?? null,
+            ':barangay' => $data['barangay'] ?? null,
+            ':city' => $data['city'] ?? null,
+            ':province' => $data['province'] ?? null,
+            ':region' => $data['region'] ?? null,
+            ':postal_code' => $data['postal_code'] ?? null,
+            ':created_at' => $data['created_at'] ?? date('Y-m-d H:i:s'),
+            ':updated_at' => $data['updated_at'] ?? null,
+            ':deleted_at' => $data['deleted_at'] ?? null,
+        ]);
     }
 
     public function findById(string $id): ?User

@@ -15,21 +15,11 @@ final class Address
 {
     private ?string $houseNumber; // e.g., "123", "Unit 5B"
     private ?string $street;      // Street name
-    private string $barangay;    // Barangay
-    private string $city;        // City or Municipality
-    private string $province;    // Province
-    private string $region;     // Region, optional
-    private ?string $postalCode;  // Postal code
-
-    /**
-     * @param string      $houseNumber House/Unit number (e.g., "123", "Unit 5B")
-     * @param string      $street      Street name
-     * @param string      $barangay    Barangay
-     * @param string      $city        City or Municipality
-     * @param string      $province    Province
-     * @param string      $postalCode  Postal code
-     * @param string|null $region      Region (optional)
-     */
+    private string $barangay;     // Barangay
+    private string $city;         // City or Municipality
+    private string $province;     // Province
+    private ?string $region;      // Region, optional
+    private ?string $postalCode;  // Postal code (4 digits)
 
     public function __construct(
         ?string $houseNumber,
@@ -37,10 +27,21 @@ final class Address
         string $barangay,
         string $city,
         string $province,
-        ?string $postalCode  = null,
-        string $region
+        string $region,
+        ?string $postalCode = null
     ) {
-        if (!preg_match('/^\d{4}$/', $postalCode)) {
+        // Barangay, City, Province should not be empty
+        if (trim($barangay) === '') {
+            throw new \InvalidArgumentException("Barangay is required and cannot be empty.");
+        }
+        if (trim($city) === '') {
+            throw new \InvalidArgumentException("City is required and cannot be empty.");
+        }
+        if (trim($province) === '') {
+            throw new \InvalidArgumentException("Province is required and cannot be empty.");
+        }
+        // Validate postal code only if provided
+        if ($postalCode !== null && $postalCode !== '' && !preg_match('/^\d{4}$/', $postalCode)) {
             throw new \InvalidArgumentException("Invalid postal code format. Must be 4 digits.");
         }
 
@@ -64,7 +65,15 @@ final class Address
             'BARMM'
         ];
 
-        if ($region !== null && !in_array($region, $validRegions, true)) {
+        // Postal code check (must be 4 digits, cannot be empty)
+        if ($postalCode === null || trim($postalCode) === '') {
+            throw new \InvalidArgumentException("Postal code is required.");
+        }
+        if (!preg_match('/^\d{4}$/', $postalCode)) {
+            throw new \InvalidArgumentException("Invalid postal code format. Must be 4 digits.");
+        }
+
+        if ($region !== null && $region !== '' && !in_array($region, $validRegions, true)) {
             throw new \InvalidArgumentException("Invalid region: {$region}");
         }
 
@@ -77,48 +86,37 @@ final class Address
         $this->postalCode = $postalCode;
     }
 
-    public function getHouseNumber(): string
+    // --- Getters ---
+    public function getHouseNumber(): ?string
     {
         return $this->houseNumber;
     }
-
-    public function getStreet(): string
+    public function getStreet(): ?string
     {
         return $this->street;
     }
-
     public function getBarangay(): string
     {
         return $this->barangay;
     }
-
     public function getCity(): string
     {
         return $this->city;
     }
-
     public function getProvince(): string
     {
         return $this->province;
     }
-
     public function getRegion(): ?string
     {
         return $this->region;
     }
-
-    public function GetPostalCode(): string
+    public function getPostalCode(): ?string
     {
         return $this->postalCode;
     }
 
-    /**
-     * Compares this Address to another Address for equality.
-     *
-     * @param Address $address
-     * @return bool
-     */
-
+    // --- Equality check ---
     public function equals(Address $address): bool
     {
         return $this->houseNumber === $address->houseNumber
@@ -130,53 +128,31 @@ final class Address
             && $this->postalCode === $address->postalCode;
     }
 
-    /**
-     * Creates an Address from an associative array (hydration).
-     *
-     * Expected keys:
-     * - houseNumber
-     * - street
-     * - barangay
-     * - city
-     * - province
-     * - postalCode
-     * - region (optional)
-     *
-     * @param array $data
-     * @return self
-     * fromArray → frontend (JSON request) → backend (hydrate object for DB or domain logic).
-     */
-
+    // --- Hydration ---
     public static function fromArray(array $data): self
-    {
+    {        
         return new self(
-            $data['houseNumber']?? '',
-            $data['street']?? '',
-            $data['barangay']?? '',
-            $data['city']?? '',
-            $data['province']?? '',
-            $data['postalCode']?? '',
-            $data['region']?? '',
+            $data['house_number'] ?? null,
+            $data['street'] ?? null,
+            $data['barangay'] ?? '',
+            $data['city'] ?? '',
+            $data['province'] ?? '',
+            $data['region'] ?? null,
+            $data['postal_code'] ?? null
         );
     }
 
-    /**
-     * Converts this Address into an associative array (dehydration).
-     *
-     * @return array<string, string|null>
-     * toArray → backend → frontend (API response).
-     */
-
+    // --- Dehydration ---
     public function toArray(): array
     {
         return [
-            'houseNumber' => $this->houseNumber,
-            'street' => $this->street,
-            'barangay' => $this->barangay,
-            'city' => $this->city,
-            'province' => $this->province,
-            'region' => $this->region,
-            'postalCode' => $this->postalCode,
+            'house_number' => $this->houseNumber,
+            'street'       => $this->street,
+            'barangay'     => $this->barangay,
+            'city'         => $this->city,
+            'province'     => $this->province,
+            'region'       => $this->region,
+            'postal_code'  => $this->postalCode,
         ];
     }
 }
