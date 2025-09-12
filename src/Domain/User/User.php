@@ -14,18 +14,18 @@ use App\Domain\User\ValueObjects\Credentials;
 final class User extends Entity
 {
     private string $role;
-    private Profile $profile;
-    private ContactInfo $contactInfo;
+    private ?Profile $profile;
+    private ?ContactInfo $contactInfo;
     private Credentials $credentials;
-    private Address $address;
+    private ?Address $address;
     private bool $isActive;
 
     public function __construct(
         string $role,
-        Profile $profile,
-        ContactInfo $contactInfo,
+        ?Profile $profile,
+        ?ContactInfo $contactInfo,
         Credentials $credentials,
-        Address $address
+        ?Address $address
     ) {
         parent::__construct();
         $this->setRole($role);
@@ -35,6 +35,7 @@ final class User extends Entity
         $this->address = $address;
         $this->isActive = true;
     }
+
 
     public function getRole(): string
     {
@@ -50,7 +51,7 @@ final class User extends Entity
         $this->role = $role;
     }
 
-    public function getProfile(): Profile
+    public function getProfile(): ?Profile
     {
         return $this->profile;
     }
@@ -61,7 +62,7 @@ final class User extends Entity
         $this->touch();
     }
 
-    public function getContactInfo(): ContactInfo
+    public function getContactInfo(): ?ContactInfo
     {
         return $this->contactInfo;
     }
@@ -83,7 +84,7 @@ final class User extends Entity
         $this->touch();
     }
 
-    public function getAddress(): Address
+    public function getAddress(): ?Address
     {
         return $this->address;
     }
@@ -179,20 +180,20 @@ final class User extends Entity
             'id' => $this->getId(),
             'role' => $this->getRole(),
             'is_active' => $this->isActive(),
-            'first_name' => $this->profile->getFirstName(),
-            'last_name' => $this->profile->getLastName(),
-            'middle_name' => $this->profile->getMiddleName(),
-            'avatar_url' => $this->profile->getAvatarUrl(),
-            'phone' => $this->contactInfo->getPhone(),
+            'first_name' => $this->profile?->getFirstName(),
+            'last_name' => $this->profile?->getLastName(),
+            'middle_name' => $this->profile?->getMiddleName(),
+            'avatar_url' => $this->profile?->getAvatarUrl(),
+            'phone' => $this->contactInfo?->getPhone(),
             'email' => $this->credentials->getEmail(),
             'password_hash' => $this->credentials->getPasswordHash(),
-            'house_number' => $this->address->getHouseNumber(),
-            'street' => $this->address->getStreet(),
-            'barangay' => $this->address->getBarangay(),
-            'city' => $this->address->getCity(),
-            'province' => $this->address->getProvince(),
-            'region' => $this->address->getRegion(),
-            'postal_code' => $this->address->getPostalCode(),
+            'house_number' => $this->address?->getHouseNumber(),
+            'street' => $this->address?->getStreet(),
+            'barangay' => $this->address?->getBarangay(),
+            'city' => $this->address?->getCity(),
+            'province' => $this->address?->getProvince(),
+            'region' => $this->address?->getRegion(),
+            'postal_code' => $this->address?->getPostalCode(),
             'created_at' => $this->getCreatedAtUtc()->format('Y-m-d H:i:s'),
             'updated_at' => $this->getLastModifiedAtUtc()->format('Y-m-d H:i:s'),
             'deleted_at' => property_exists($this, 'deletedAtUtc') && $this->deletedAtUtc

@@ -51,18 +51,22 @@ final class Credentials
     {
         return new self($this->email, $newPassword);
     }
+
+    // --- Hydration from database (hashed password already stored) ---
     public static function fromHashed(string $email, string $hashedPassword): self
     {
-        $instance = new self($email, 'dummy'); // temporary dummy password
-        $instance->passwordHash = $hashedPassword; // override hash
+        $instance = new self($email, $hashedPassword);
+        $instance->email = strtolower($email);
+        $instance->passwordHash = $hashedPassword; // set directly without hashing
         return $instance;
     }
-    // --- Hydration from database (hashed password already stored) ---
+
     public static function fromArray(array $data): self
     {
-        $obj = new self($data['email'], 'Temporary123@gmail.com'); // plain password not used
-        $obj->passwordHash = $data['password_hash'];     // overwrite with stored hash
-        return $obj;
+        $instance = new self($data['email'], $data['password_hash']);
+        $instance->email = strtolower($data['email']);
+        $instance->passwordHash = $data['password_hash']; // set directly without hashing
+        return $instance;
     }
 
     // --- Dehydration to array (for DB or API response) ---
