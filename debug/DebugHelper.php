@@ -37,4 +37,5 @@ class DebugHelper
 
         return $data; // scalar value
     }
+
 }
