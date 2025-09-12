@@ -9,8 +9,13 @@ use FastRoute\RouteCollector;
 // Load container
 $container = require __DIR__ . '/../src/Infrastructure/Container.php';
 
+/*
+ * Routes are not registered in the container because they are not services.
+ * - Routes define application rules (URL → controller mapping).
+ * - The container’s responsibility is only to build and supply dependencies.
+ */
 // Routes closure (function)
-$routesDefinition = require __DIR__ . '/../src/Presentation/Http/Routes/routes.php';
+$routesDefinition = require __DIR__ . '/../src/Presentation/Routes/routes.php';
 
 // Initialize kernel
 $kernel = new HttpKernel($container, $routesDefinition);

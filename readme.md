@@ -1,4 +1,4 @@
-# requireed to run to install required pacakes
+# Run this to install required pacakes.
 ```bash
 composer install
 ````
