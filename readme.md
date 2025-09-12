@@ -32,3 +32,14 @@ C:\Windows\System32\drivers\etc\hosts with admin rights.
 127.0.0.1   gearfalcon.test
 ```
 4. Restart Apache
+
+
+❓ Optional Repositories (only if needed separately)
+
+You may skip these and handle them inside parent repositories:
+
+CartItemRepository → only if you want cart items separate, otherwise keep inside CartRepository.
+
+TechnicianSkillRepository → only if skills management becomes complex, otherwise handle via TechnicianRepository.
+
+JobAssignmentRepository → only if you need heavy reporting/logic for assignments, otherwise keep inside JobRepository.
