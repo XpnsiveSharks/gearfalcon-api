@@ -29,7 +29,7 @@ use App\Application\Admin\Services\PromotionService;
 
 // Controllers
 use App\Presentation\Controllers\AuthController;
-use App\Presentation\Controllers\QuoteController;
+use App\Presentation\Controllers\Customer\QuoteController;
 use App\Presentation\Controllers\TechnicianController;
 
 // Middleware
@@ -74,14 +74,14 @@ $corsMiddleware = new CorsMiddleware();
 // Controllers
 $authController = new AuthController($authService, $userRegistrationService);
 $quoteController = new QuoteController($quoteService);
-$technicianController = new TechnicianController($promotionService);
+// $technicianController = new TechnicianController($promotionService); remove for now since wala pang nakalagay sa tecnh controller
 
 // DI Container
 $container = [
     CorsMiddleware::class => $corsMiddleware,
     AuthController::class => $authController,
     QuoteController::class => $quoteController,
-    'App\Presentation\Controllers\TechnicianController' => $technicianController,
+    // 'App\Presentation\Controllers\TechnicianController' => $technicianController, same here wala pang nakalagay sa technician controller
 ];
 
 return $container;
