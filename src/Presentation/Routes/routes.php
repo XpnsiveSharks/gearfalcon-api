@@ -5,6 +5,7 @@ use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Admin\AdminController;
 use FastRoute\RouteCollector;
 
+
 return function(RouteCollector $r) {
     // Test home route
     $r->addRoute('GET', '/', function() {
@@ -16,8 +17,9 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/login', [AuthController::class, 'login']);
         $r->addRoute('POST', '/register', [AuthController::class, 'register']);
         $r->addRoute('POST', '/logout', [AuthController::class, 'logout']);
+        
     });
-
+    
     // Quote routes
     $r->addGroup('/quotes', function (RouteCollector $r) {
         $r->addRoute('POST', '', [QuoteController::class, 'create']);                // create a quote
