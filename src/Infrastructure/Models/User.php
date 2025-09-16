@@ -5,7 +5,6 @@ namespace App\Infrastructure\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class User extends Model
 {
     use SoftDeletes;
@@ -20,7 +19,11 @@ class User extends Model
         'email',
         'password',
         'role',
-        'phone'
+        'phone',
+        'is_verified',
+        'verification_code',
+        'verification_code_expires_at',
+        'email_verified_at',
     ];
 
     // Relationships
