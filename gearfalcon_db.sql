@@ -1,15 +1,27 @@
--- USERS
+-- Step 1: Create the database
+CREATE DATABASE IF NOT EXISTS gearfalcon_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Step 2: Use the database
+USE gearfalcon_db;
+
+-- Step 3: Now create your tables
+-- USERS (Updated with email verification fields)
 CREATE TABLE users (
   id CHAR(36) PRIMARY KEY, -- string user id (UUID/custom)
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL, -- hashed password
-  role ENUM('admin','customer','technician') NOT NULL,
+  role ENUM('admin','customer','technician') NOT NULL DEFAULT 'customer',
   phone VARCHAR(50),
+  is_verified TINYINT(1) NOT NULL DEFAULT 0,
+  verification_code CHAR(4),
+  verification_code_expires_at TIMESTAMP NULL,
+  email_verified_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL
 );
+
 -- CUSTOMERS
 CREATE TABLE customers (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -20,6 +32,7 @@ CREATE TABLE customers (
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 -- CUSTOMER ADDRESSES
 CREATE TABLE customer_addresses (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -37,6 +50,7 @@ CREATE TABLE customer_addresses (
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
+
 -- TECHNICIANS
 CREATE TABLE technicians (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -49,6 +63,7 @@ CREATE TABLE technicians (
   deleted_at TIMESTAMP NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 -- SKILLS
 CREATE TABLE skills (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -58,6 +73,7 @@ CREATE TABLE skills (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL
 );
+
 -- TECHNICIAN SKILLS (many-to-many)
 CREATE TABLE technician_skills (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -149,6 +165,8 @@ CREATE TABLE job_assignments (
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
   FOREIGN KEY (technician_id) REFERENCES technicians(id) ON DELETE CASCADE
 );
+
+-- QUOTES
 CREATE TABLE quotes (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   customer_id BIGINT NOT NULL,
@@ -165,3 +183,6 @@ CREATE TABLE quotes (
   FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE SET NULL
 );
 
+-- Add indexes for better performance
+CREATE INDEX idx_users_verification_code ON users(verification_code);
+CREATE INDEX idx_users_email_verified ON users(email, is_verified);

@@ -26,6 +26,7 @@ use App\Application\Customer\Services\CustomerRegistrationService;
 use App\Application\Services\AuthService;
 use App\Application\Services\QuoteService;
 use App\Application\Admin\Services\PromotionService;
+use App\Application\Services\EmailVerificationService; 
 
 // Controllers
 use App\Presentation\Controllers\AuthController;
@@ -67,12 +68,13 @@ $customerRegistrationService = new CustomerRegistrationService($userRegistration
 $authService = new AuthService($userRepository);
 $quoteService = new QuoteService($quoteRepository, $jobRepository);
 $promotionService = new PromotionService($userRepository, $technicianRepository);
+$emailVerificationService = new EmailVerificationService($userRepository);
 
 // Middleware
 $corsMiddleware = new CorsMiddleware();
  
 // Controllers
-$authController = new AuthController($authService, $userRegistrationService);
+$authController = new AuthController($authService, $userRegistrationService,  $emailVerificationService);
 $quoteController = new QuoteController($quoteService);
 // $technicianController = new TechnicianController($promotionService); remove for now since wala pang nakalagay sa tecnh controller
 

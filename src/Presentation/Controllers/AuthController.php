@@ -3,6 +3,7 @@ namespace App\Presentation\Controllers;
 
 use App\Application\Services\AuthService;
 use App\Application\Services\UserRegistrationService;
+use App\Application\Services\EmailVerificationService;
 use App\Application\Exceptions\InvalidCredentialsException;
 use App\Infrastructure\Models\User;
 
@@ -10,16 +11,22 @@ class AuthController
 {
     private AuthService $authService;
     private UserRegistrationService $userRegistrationService;
+    private EmailVerificationService $verificationService;
 
-    public function __construct(AuthService $authService, UserRegistrationService $userRegistrationService)
-    {
+    public function __construct(
+        AuthService $authService,
+        UserRegistrationService $userRegistrationService,
+        EmailVerificationService $verificationService
+    ) {
         $this->authService = $authService;
         $this->userRegistrationService = $userRegistrationService;
+        $this->verificationService = $verificationService;
     }
 
     private function jsonResponse(array $data, int $statusCode = 200): string
     {
         http_response_code($statusCode);
+        header('Content-Type: application/json');
         return json_encode($data);
     }
 
@@ -42,6 +49,7 @@ class AuthController
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'is_verified' => $user->is_verified
                 ]
             ]);
         } catch (InvalidCredentialsException $e) {
@@ -52,17 +60,70 @@ class AuthController
     public function register(array $request): string
     {
         try {
+            // Step 1: Create user account (unverified)
             $user = $this->userRegistrationService->registerUser($request);
+
+            // Step 2: Send verification email
+            $this->verificationService->sendVerificationCode($user->email);
 
             return $this->jsonResponse([
                 'success' => true,
+                'message' => 'Registration successful. Please check your email for verification code.',
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
-                ]
+                    'is_verified' => false
+                ],
+                'next_step' => 'verify_email'
             ], 201);
+        } catch (\Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function verifyEmail(array $request): string
+    {
+        $email = $request['email'] ?? '';
+        $code  = $request['code'] ?? '';
+
+        if (empty($email) || empty($code)) {
+            return $this->jsonResponse(['error' => 'Email and verification code are required'], 422);
+        }
+
+        try {
+            // Step 3 & 4: Verify code and activate user account
+            $verified = $this->verificationService->verifyEmail($email, $code);
+
+            if (!$verified) {
+                return $this->jsonResponse(['error' => 'Invalid verification code'], 400);
+            }
+
+            return $this->jsonResponse([
+                'success' => true,
+                'message' => 'Email verified successfully! You can now login to your account.'
+            ]);
+        } catch (\Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function resendVerificationCode(array $request): string
+    {
+        $email = $request['email'] ?? '';
+
+        if (empty($email)) {
+            return $this->jsonResponse(['error' => 'Email is required'], 422);
+        }
+
+        try {
+            $this->verificationService->resendVerificationCode($email);
+
+            return $this->jsonResponse([
+                'success' => true,
+                'message' => 'Verification code sent successfully. Please check your email.'
+            ]);
         } catch (\Exception $e) {
             return $this->jsonResponse(['error' => $e->getMessage()], 400);
         }
