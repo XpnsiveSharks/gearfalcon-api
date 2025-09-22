@@ -35,6 +35,7 @@ use App\Presentation\Controllers\TechnicianController;
 
 // Middleware
 use App\Presentation\Middleware\CorsMiddleware;
+use App\Presentation\Http\Middleware\AuthMiddleware;
 
 // Load .env
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../../', '.env.development');
@@ -72,6 +73,8 @@ $emailVerificationService = new EmailVerificationService($userRepository);
 
 // Middleware
 $corsMiddleware = new CorsMiddleware();
+// Auth middleware with JWT secret
+$authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
  
 // Controllers
 $authController = new AuthController($authService, $userRegistrationService,  $emailVerificationService);
@@ -81,6 +84,7 @@ $quoteController = new QuoteController($quoteService);
 // DI Container
 $container = [
     CorsMiddleware::class => $corsMiddleware,
+    AuthMiddleware::class => $authMiddleware,
     AuthController::class => $authController,
     QuoteController::class => $quoteController,
     // 'App\Presentation\Controllers\TechnicianController' => $technicianController, same here wala pang nakalagay sa technician controller
