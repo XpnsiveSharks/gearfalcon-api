@@ -11,6 +11,17 @@ return function(RouteCollector $r) {
         echo "Welcome to GearFalcon API 🚀";
     });
 
+    // Health check route
+    $r->addRoute('GET', '/health', function() {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'healthy',
+            'timestamp' => date('c'),
+            'version' => '1.0.0',
+            'environment' => getenv('APP_ENV') ?: 'development'
+        ]);
+    });
+
     // Auth routes
     $r->addGroup('/auth', function (RouteCollector $r) {
         $r->addRoute('POST', '/login', [AuthController::class, 'login']);

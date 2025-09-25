@@ -36,9 +36,24 @@ use App\Presentation\Controllers\TechnicianController;
 // Middleware
 use App\Presentation\Middleware\CorsMiddleware;
 
-// Load .env
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../../', '.env.development');
-$dotenv->load();
+// Load .env with error handling
+try {
+    $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
+    $dotenv->load();
+} catch (\Exception $e) {
+    // Log the error but don't crash in development
+    error_log("Environment file not found: " . $e->getMessage());
+
+    // Set default values for development
+    if (!getenv('APP_ENV')) {
+        putenv('APP_ENV=development');
+    }
+
+    // Only throw error if in production
+    if (getenv('APP_ENV') === 'production') {
+        throw new \RuntimeException('Environment configuration required in production');
+    }
+}
 
 // Build DB config
 $dbConfig = [
