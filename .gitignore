@@ -1,21 +1,219 @@
+# Dependencies
 /vendor/
 composer.lock
-.env
-.env.production
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# logs
+# Environment files (contains sensitive data)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Docker secrets and sensitive files
+secrets/
+docker-secrets/
+*_secret
+*_password
+*_key
+*_token
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+gearfalcon_db.sql.backup
+
+# Logs
 logs/
 *.log
+log/
+apache2/
+var/log/
 
-# cache or temp files
+# Cache and temporary files
 cache/
 tmp/
+temp/
+.tmp/
+.cache/
+.next/
+dist/
+build/
 
-# OS files
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# IDE/editor
+# IDE and editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
 *.iml
+.project
+.settings/
+.vscode/settings.json
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux
+*~
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.ipr
+*.iml
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+.netrwhist
+*~
+tags
+[._]*.un~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# SASS
+.sass-cache/
+
+# CSS
+*.css.map
+
+# JS
+*.js.map
+
+# TypeScript
+*.tsbuildinfo
+
+# PHP
+/composer.phar
+/vendor/
+
+# Docker
+.dockerignore
+Dockerfile.*
+docker-compose.*.yml
+docker-compose.*.yaml
+
+# Generated files
+generate-secrets.bat.backup
+start-*.bat.backup
+stop.bat.backup
