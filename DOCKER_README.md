@@ -60,13 +60,13 @@ The project includes comprehensive scripts for easy Docker management on both Wi
 - ✅ **Error Handling**: Validates Docker installation and environment
 - ✅ **Service Verification**: Confirms services start successfully
 - ✅ **User Guidance**: Comprehensive help and monitoring commands
-- ✅ **Health Checks**: Verifies service endpoints after startup
+- ✅ **Health Checks**: Verifies service endpoints after startup (PowerShell-based on Windows)
 - 📁 **Location**: `scripts/windows/start-dev.bat` (Windows) / `scripts/linux/start-dev.sh` (Linux)
 
 ### **start-prod** - Production Environment
 - ✅ **Security Validation**: Verifies secrets directory and files exist
 - ✅ **Environment Checks**: Validates production configuration
-- ✅ **Health Verification**: Tests service endpoints after startup
+- ✅ **Health Verification**: Tests service endpoints after startup (PowerShell-based on Windows)
 - ✅ **Production Monitoring**: Comprehensive status reporting
 - ✅ **Error Prevention**: Prevents startup with missing configuration
 - 📁 **Location**: `scripts/windows/start-prod.bat` (Windows) / `scripts/linux/start-prod.sh` (Linux)
@@ -108,9 +108,14 @@ The configuration now uses Docker secrets for database credentials:
 - ✅ **PHP 8.3**: Updated from deprecated PHP 8.1 to latest stable
 - ✅ **Multi-stage Build**: Optimized image size with production builds
 - ✅ **Non-root User**: Security improvement with `gearfalcon` user
-- ✅ **Health Checks**: Built-in container health monitoring
+- ✅ **Health Checks**: Built-in container health monitoring (wget/curl on Linux, PowerShell on Windows)
 - ✅ **Metadata Labels**: Proper container labeling for management
 - ✅ **Security Hardening**: Clean package installation and user isolation
+
+### **Cross-Platform Compatibility**
+- ✅ **Linux**: Uses `docker-compose.yml` with wget-based health checks
+- ✅ **Windows**: Uses `docker-compose.windows.yml` with PowerShell-based health checks
+- ✅ **Automatic Detection**: Scripts detect the appropriate compose file for your platform
 
 ### **Service Health Checks**
 All services now include comprehensive health checks:

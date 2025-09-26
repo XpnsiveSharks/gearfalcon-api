@@ -19,12 +19,12 @@ if "%1"=="dev" (
         echo Showing all development logs...
         echo Press Ctrl+C to stop following logs
         echo.
-        docker-compose logs -f
+        docker-compose -f docker-compose.windows.yml logs -f
     ) else (
         echo Showing logs for service: %2
         echo Press Ctrl+C to stop following logs
         echo.
-        docker-compose logs -f %2
+        docker-compose -f docker-compose.windows.yml logs -f %2
     )
 ) else if "%1"=="prod" (
     echo 📋 GearFalcon Production Logs
@@ -53,10 +53,10 @@ if "%1"=="dev" (
     echo ============================
     echo.
     echo Development Environment:
-    docker-compose ps
+    docker-compose -f docker-compose.windows.yml ps
     echo.
     echo Production Environment:
-    docker-compose -f docker-compose.prod.yml ps
+    docker-compose -f docker-compose.windows.yml ps
     echo.
     echo Resource Usage:
     docker stats --no-stream
@@ -129,8 +129,7 @@ if "%1"=="dev" (
     if /i "!confirm!"=="y" (
         echo.
         echo Stopping all services first...
-        docker-compose down --timeout 30 2>nul
-        docker-compose -f docker-compose.prod.yml down --timeout 30 2>nul
+        docker-compose -f docker-compose.windows.yml down --timeout 30 2>nul
 
         echo.
         echo Cleaning up Docker resources...
@@ -152,18 +151,18 @@ if "%1"=="dev" (
     echo ================================
     echo.
     echo Usage:
-    echo   logs.bat dev [service]     - View development logs
-    echo   logs.bat prod [service]    - View production logs
+    echo   scripts\windows\logs.bat dev [service]     - View development logs
+    echo   scripts\windows\logs.bat prod [service]    - View production logs
     echo   logs.bat status            - Show service status
     echo   logs.bat health            - Check service health
     echo   logs.bat cleanup           - Clean up Docker resources
     echo.
     echo Examples:
-    echo   logs.bat dev               - All development logs
-    echo   logs.bat dev backend       - Backend development logs
-    echo   logs.bat prod frontend     - Frontend production logs
-    echo   logs.bat status            - Show all service status
-    echo   logs.bat health            - Check all service health
+    echo   scripts\windows\logs.bat dev               - All development logs
+    echo   scripts\windows\logs.bat dev backend       - Backend development logs
+    echo   scripts\windows\logs.bat prod frontend     - Frontend production logs
+    echo   scripts\windows\logs.bat status            - Show all service status
+    echo   scripts\windows\logs.bat health            - Check all service health
     echo.
     echo Press any key to exit...
     pause >nul

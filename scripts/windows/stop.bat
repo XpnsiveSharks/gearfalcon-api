@@ -19,9 +19,9 @@ if errorlevel 1 (
 )
 echo ✅ Docker is available
 
-:: Navigate to script directory
+:: Navigate to project root directory (parent of scripts directory)
 echo [2/4] Setting up environment...
-cd /d "%~dp0"
+cd /d "%~dp0\..\.."
 if errorlevel 1 (
     echo ❌ Failed to change directory!
     pause
@@ -43,11 +43,11 @@ echo (This may take up to 30 seconds)
 echo.
 
 :: First, try graceful shutdown
-docker-compose down --timeout 30 2>nul
+docker-compose -f docker-compose.windows.yml down --timeout 30 2>nul
 
 :: Check for orphaned containers and clean them up
 echo [4/4] Cleaning up orphaned containers...
-for /f "tokens=*" %%i in ('docker-compose ps --quiet 2^>nul') do (
+for /f "tokens=*" %%i in ('docker-compose -f docker-compose.windows.yml ps --quiet 2^>nul') do (
     set "container_found=1"
     docker stop %%i --time 10 >nul 2>&1
     docker rm %%i >nul 2>&1
@@ -60,11 +60,11 @@ for /f "tokens=*" %%i in ('docker network ls --filter "label=com.docker.compose.
 
 :: Verify all services are stopped
 timeout /t 3 /nobreak >nul
-docker-compose ps --quiet 2>nul | findstr . >nul 2>&1
+docker-compose -f docker-compose.windows.yml ps --quiet 2>nul | findstr . >nul 2>&1
 if not errorlevel 1 (
     echo ⚠️  Some services may still be running.
     echo Forcing cleanup...
-    docker-compose down --volumes --remove-orphans --timeout 5 2>nul
+    docker-compose -f docker-compose.windows.yml down --volumes --remove-orphans --timeout 5 2>nul
 )
 
 echo.
@@ -73,7 +73,7 @@ echo.
 
 :: Show system status
 echo 📊 System Status:
-docker-compose ps 2>nul | findstr /v "Name\|---" | findstr . >nul 2>&1
+docker-compose -f docker-compose.windows.yml ps 2>nul | findstr /v "Name\|---" | findstr . >nul 2>&1
 if errorlevel 1 (
     echo    • No containers running
 ) else (
@@ -89,11 +89,11 @@ for /f "tokens=*" %%i in ('docker system df --format "table {{.Type}}\t{{.TotalC
 
 echo.
 echo 🚀 To start services again:
-echo    • Development: double-click start-dev.bat
-echo    • Production:  double-click start-prod.bat
+echo    • Development: double-click scripts\windows\start-dev.bat
+echo    • Production:  double-click scripts\windows\start-prod.bat
 echo.
 echo 🛠️  Maintenance Commands:
-echo    docker-compose logs -f          - View all logs
+echo    docker-compose -f docker-compose.windows.yml logs -f          - View all logs
 echo    docker system prune             - Clean up unused resources
 echo    docker volume prune             - Remove unused volumes
 echo.
