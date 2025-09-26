@@ -56,8 +56,8 @@ echo    Backend:  http://localhost:8080
 echo    Health Check: http://localhost:8080/health
 echo.
 echo 📊 Monitoring Commands:
-echo    View logs:      docker-compose -f docker-compose.windows.yml logs -f
-echo    Check status:   docker-compose -f docker-compose.windows.yml ps
+echo    View logs:      docker-compose -f docker-compose.yml logs -f
+echo    Check status:   docker-compose -f docker-compose.yml ps
 echo    Stop services:  Ctrl+C or double-click scripts\windows\stop.bat
 echo.
 
@@ -66,7 +66,7 @@ echo [4/5] Building and starting services...
 echo (This may take several minutes on first run)
 echo.
 
-docker-compose -f docker-compose.windows.yml up --build
+docker-compose -f docker-compose.yml up --build
 
 :: Check if services started successfully
 echo.
@@ -74,7 +74,7 @@ echo [5/5] Verifying services...
 timeout /t 10 /nobreak >nul
 
 :: Check if containers are running
-docker-compose -f docker-compose.windows.yml ps --quiet | findstr . >nul 2>&1
+docker-compose -f docker-compose.yml ps --quiet | findstr . >nul 2>&1
 if errorlevel 1 (
     echo ❌ Services failed to start properly!
     echo Check the logs above for errors.
@@ -91,10 +91,10 @@ echo    • Backend (PHP)      - http://localhost:8080
 echo    • Database (MySQL)   - Internal only
 echo.
 echo 📋 Useful Commands:
-echo    docker-compose -f docker-compose.windows.yml logs -f     - View all logs
-echo    docker-compose -f docker-compose.windows.yml logs [service] - View specific service logs
-echo    docker-compose -f docker-compose.windows.yml down        - Stop all services
-echo    docker-compose -f docker-compose.windows.yml restart     - Restart all services
+echo    docker-compose -f docker-compose.yml logs -f     - View all logs
+echo    docker-compose -f docker-compose.yml logs [service] - View specific service logs
+echo    docker-compose -f docker-compose.yml down        - Stop all services
+echo    docker-compose -f docker-compose.yml restart     - Restart all services
 echo.
 echo Press Ctrl+C to stop all services...
 echo.

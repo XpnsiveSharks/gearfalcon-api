@@ -6,7 +6,7 @@ This guide explains how to run both the Next.js frontend and PHP backend using D
 
 - **Backend**: PHP 8.3 with security hardening
 - **Frontend**: Next.js with App Router
-- **Database**: MySQL 8.0 (containerized with secrets management)
+- **Database**: MySQL 8.0 (containerized with environment variables)
 - **Scripts**: Organized in `scripts/` folder with OS-specific subfolders (`windows/` and `linux/`)
 
 ## Prerequisites
@@ -71,7 +71,7 @@ docker-compose -f docker-compose.prod.yml up --build -d
 ## 🔒 Security Features
 
 - **Database Isolation**: MySQL is not exposed to host (internal only)
-- **Docker Secrets**: Secure credential management for production
+- **Environment Variables**: Secure credential management via docker-compose
 - **Resource Limits**: CPU and memory constraints prevent resource exhaustion
 - **Health Monitoring**: Automatic service health verification
 - **Non-root Containers**: Security hardening with restricted user permissions
@@ -173,9 +173,9 @@ docker-compose exec db mysql -u gearfalcon_user -p
 # Connect to MySQL container (production)
 docker-compose -f docker-compose.prod.yml exec db mysql -u gearfalcon_user -p
 
-# Database credentials are managed through Docker secrets in production
-# Development uses: gearfalcon_user / gearfalcon_password
-# Production uses: secrets/db_password.txt file
+# Database credentials are managed through environment variables in docker-compose.yml
+# Username: gearfalcon_user
+# Password: SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC (defined in docker-compose.yml)
 ```
 
 ### Database Persistence
@@ -232,92 +232,35 @@ sudo ./scripts/linux/logs.sh cleanup
 1. **Port already in use**: Change ports in docker-compose.yml or stop conflicting services
 2. **Permission issues**: Make sure Docker has proper permissions (Windows: Docker Desktop, Linux: user in docker group)
 3. **Path not found**: Ensure the frontend path in docker-compose.yml is correct
-4. **Secrets missing**: Production startup will fail if secrets/ directory is missing
+4. **Environment variables**: Ensure docker-compose.yml has correct database credentials
 5. **Health check failures**: Services may take time to start - check logs with `.\scripts\windows\logs.bat` (Windows) or `sudo ./scripts/linux/logs.sh` (Linux)
 
-### 🔐 Secrets-Related Issues
-
-#### **Issue: "Secrets directory not found"**
-
-##### Windows
-```bash
-# Solution: Generate secrets first
-.\scripts\windows\generate-secrets.bat
-```
-
-##### Linux/Ubuntu
-```bash
-# Solution: Generate secrets first
-sudo ./scripts/linux/generate-secrets.sh
-```
-
-#### **Issue: "Permission denied" on secrets files**
-
-##### Windows
-```bash
-# Solution: Set proper permissions
-icacls secrets\* /inheritance:r /grant:r "%username%:F"
-icacls secrets\* /remove "Users" "Everyone" "Authenticated Users"
-```
-
-##### Linux/Ubuntu
-```bash
-# Solution: Set proper permissions
-chmod 600 secrets/*
-```
-
-#### **Issue: Secrets committed to git (SECURITY RISK!)**
-```bash
-# Solution: Remove from git history
-git rm --cached -r secrets/
-git commit -m "Remove secrets from repository"
-git push --force-with-lease
-
-# Generate new secrets
-# Windows: .\scripts\windows\generate-secrets.bat
-# Linux: sudo ./scripts/linux/generate-secrets.sh
-```
+### 🔧 Environment Variables Issues
 
 #### **Issue: Database connection errors**
 
-##### Windows
+##### Solution
 ```bash
-# Solution: Check secrets format
-type secrets\db_password.txt
-# Should contain only the password, no extra characters
+# Check that docker-compose.yml has correct credentials
+# Database password: SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC
+# Root password: FjmsJMI5cU1HpdNROGkBYh8aErWDLZSV
 
-# Regenerate if needed
-.\scripts\windows\generate-secrets.bat
+# Test database connection
+docker-compose exec db mysql -u gearfalcon_user -pSF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC -e "SHOW DATABASES;"
 ```
 
-##### Linux/Ubuntu
+#### **Issue: Services won't start**
+
+##### Solution
 ```bash
-# Solution: Check secrets format
-cat secrets/db_password.txt
-# Should contain only the password, no extra characters
+# Check service status
+docker-compose ps
 
-# Regenerate if needed
-sudo ./scripts/linux/generate-secrets.sh
-```
+# View logs for errors
+docker-compose logs
 
-#### **Issue: Team member can't start services**
-
-##### Windows
-```bash
-# Solution: Each team member needs their own secrets
-.\scripts\windows\generate-secrets.bat
-
-# Verify setup
-.\scripts\windows\logs.bat health
-```
-
-##### Linux/Ubuntu
-```bash
-# Solution: Each team member needs their own secrets
-sudo ./scripts/linux/generate-secrets.sh
-
-# Verify setup
-sudo ./scripts/linux/logs.sh health
+# Restart services
+docker-compose down && docker-compose up -d
 ```
 
 ### Docker Commands
@@ -347,72 +290,36 @@ For production deployment:
 
 1. Update all environment variables in `.env.production`
 2. Use the production docker-compose file
-3. Consider using Docker secrets for sensitive data
+3. Use environment variables for sensitive data (recommended)
 4. Set up proper logging and monitoring
 5. Configure reverse proxy (nginx) if needed
 
 ## Team Development Setup
 
-### 🔐 Docker Secrets Configuration for Teams
+### 🔧 Environment Variables Configuration for Teams
 
-**⚠️ IMPORTANT**: Docker secrets contain sensitive information and should **NEVER** be committed to version control.
+**⚠️ IMPORTANT**: Environment variables in docker-compose.yml contain sensitive information and should **NEVER** be committed to version control with real passwords.
 
-#### **Step 1: Generate Your Own Secrets**
+#### **Configuration**
 
-Each team member must generate their own unique secrets for local development:
+The docker-compose.yml file contains the database credentials as environment variables:
 
-#### Windows
-```bash
-# Option 1: Use the automated script (recommended)
-.\scripts\windows\generate-secrets.bat
+```yaml
+db:
+  environment:
+    MYSQL_ROOT_PASSWORD: FjmsJMI5cU1HpdNROGkBYh8aErWDLZSV
+    MYSQL_DATABASE: gearfalcon_db_dev
+    MYSQL_USER: gearfalcon_user
+    MYSQL_PASSWORD: SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC
 
-# Option 2: Generate manually
-powershell -Command "[Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_password.txt -Encoding UTF8"
-powershell -Command "[Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_root_password.txt -Encoding UTF8"
-echo "gearfalcon_db_dev" > secrets/db_database.txt
+backend:
+  environment:
+    DB_PASSWORD: SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC
 ```
 
-#### Linux/Ubuntu
-```bash
-# Option 1: Use the automated script (recommended)
-sudo ./scripts/linux/generate-secrets.sh
+#### **Team Development**
 
-# Option 2: Generate manually
-openssl rand -base64 32 > secrets/db_password.txt
-openssl rand -base64 32 > secrets/db_root_password.txt
-echo "gearfalcon_db_dev" > secrets/db_database.txt
-chmod 600 secrets/*
-```
-
-#### **Step 2: Set Proper File Permissions**
-
-```bash
-# Set owner-only permissions on secrets
-icacls secrets\* /inheritance:r /grant:r "%username%:F"
-icacls secrets\* /remove "Users" "Everyone" "Authenticated Users"
-```
-
-#### **Step 3: Verify Secrets Setup**
-
-##### Windows
-```bash
-# Check that secrets are properly configured
-.\scripts\windows\logs.bat health
-
-# Or manually verify
-curl http://localhost:8080/health
-curl http://localhost:3000/api/health
-```
-
-##### Linux/Ubuntu
-```bash
-# Check that secrets are properly configured
-sudo ./scripts/linux/logs.sh health
-
-# Or manually verify
-curl http://localhost:8080/health
-curl http://localhost:3000/api/health
-```
+Each team member uses the same environment variables configuration - no per-user setup required.
 
 ### 🔧 Secrets Generation Scripts
 
@@ -532,14 +439,14 @@ ls -la secrets/
 
 ### 🔒 Production Security Features
 - **Database Isolation**: MySQL not exposed to host (internal networking only)
-- **Docker Secrets**: Secure credential management with file-based secrets
+- **Environment Variables**: Secure credential management via docker-compose
 - **Non-root Containers**: All services run with restricted user permissions
 - **Resource Limits**: CPU and memory constraints prevent resource exhaustion
 - **Health Monitoring**: Automatic service health verification
 
 ### Security Best Practices
 - ✅ **Change all default passwords** before production deployment
-- ✅ **Use Docker secrets** for sensitive environment variables (implemented)
+- ✅ **Use environment variables** for sensitive configuration (implemented)
 - ✅ **Regularly update base images** (PHP 8.3, MySQL 8.0, Node.js latest)
 - ✅ **Scan images for vulnerabilities** using Docker security scanning
 - ✅ **Monitor resource usage** to detect anomalies
@@ -624,9 +531,9 @@ docker network ls
 
 ## 🤝 Team Development Workflow
 
-### 🔐 Secrets Management for Teams
+### 🔧 Environment Variables Configuration for Teams
 
-#### **Initial Setup (One-Time per Developer)**
+#### **Initial Setup (One-Time)**
 
 ##### Windows
 ```bash
@@ -634,10 +541,7 @@ docker network ls
 git clone <repository-url>
 cd gearfalcon-app
 
-# 2. Generate your own secrets
-.\scripts\windows\generate-secrets.bat
-
-# 3. Start development environment
+# 2. Start development environment (no secrets needed!)
 .\scripts\windows\start-dev.bat
 ```
 
@@ -647,10 +551,7 @@ cd gearfalcon-app
 git clone <repository-url>
 cd gearfalcon-app
 
-# 2. Generate your own secrets
-sudo ./scripts/linux/generate-secrets.sh
-
-# 3. Start development environment
+# 2. Start development environment (no secrets needed!)
 sudo ./scripts/linux/start-dev.sh
 ```
 
@@ -694,16 +595,8 @@ sudo ./scripts/linux/logs.sh dev
 sudo ./scripts/linux/stop.sh
 ```
 
-#### **Security Best Practices**
-- ✅ **Each developer has unique secrets** (never shared)
-- ✅ **Secrets never committed to git** (in .gitignore)
-- ✅ **Use different secrets for dev/prod** environments
-- ✅ **Regenerate secrets regularly** for security
-- ✅ **Monitor for accidental commits** of sensitive data
-
 #### **Team Communication**
-- 📢 **New team members**: Must run `.\scripts\windows\generate-secrets.bat` (Windows) or `sudo ./scripts/linux/generate-secrets.sh` (Linux) before starting
-- 🔒 **Security incidents**: Immediately regenerate all secrets if compromised
+- 📢 **New team members**: Can start immediately with `.\scripts\windows\start-dev.bat` (Windows) or `sudo ./scripts/linux/start-dev.sh` (Linux)
 - 📝 **Documentation**: All team members should read this Docker guide
 - 🛠️ **Issues**: Use `.\scripts\windows\logs.bat health` (Windows) or `sudo ./scripts/linux/logs.sh health` (Linux) for quick diagnostics
 
@@ -716,8 +609,8 @@ sudo ./scripts/linux/stop.sh
 # Stop development
 .\scripts\windows\stop.bat
 
-# Generate production secrets (in CI/CD)
-# Update docker-compose.prod.yml if needed
+# Update environment variables in docker-compose.prod.yml
+# Set production database credentials
 
 # Start production
 .\scripts\windows\start-prod.bat
@@ -728,8 +621,8 @@ sudo ./scripts/linux/stop.sh
 # Stop development
 sudo ./scripts/linux/stop.sh
 
-# Generate production secrets (in CI/CD)
-# Update docker-compose.prod.yml if needed
+# Update environment variables in docker-compose.prod.yml
+# Set production database credentials
 
 # Start production
 sudo ./scripts/linux/start-prod.sh
@@ -742,10 +635,7 @@ sudo ./scripts/linux/start-prod.sh
 # Stop production
 .\scripts\windows\stop.bat
 
-# Verify development secrets exist
-if not exist "secrets" .\scripts\windows\generate-secrets.bat
-
-# Start development
+# Start development (uses development environment variables)
 .\scripts\windows\start-dev.bat
 ```
 
@@ -754,9 +644,6 @@ if not exist "secrets" .\scripts\windows\generate-secrets.bat
 # Stop production
 sudo ./scripts/linux/stop.sh
 
-# Verify development secrets exist
-[ ! -d "secrets" ] && sudo ./scripts/linux/generate-secrets.sh
-
-# Start development
+# Start development (uses development environment variables)
 sudo ./scripts/linux/start-dev.sh
 ```

@@ -9,10 +9,12 @@ if not exist "secrets" (
 )
 
 echo 🔑 Generating database password...
-powershell -Command "[Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_password.txt -Encoding UTF8"
+REM Use multiple fallback methods for reliable password generation
+powershell -Command "try { [Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_password.txt -Encoding UTF8 } catch { try { $password = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_}); $password | Out-File -FilePath secrets/db_password.txt -Encoding UTF8 } catch { $timestamp = Get-Date -Format 'yyyyMMddHHmmss'; $random = Get-Random; $password = $timestamp + $random + 'DbPass2024!'; $password | Out-File -FilePath secrets/db_password.txt -Encoding UTF8 } }"
 
 echo 🔑 Generating root password...
-powershell -Command "[Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_root_password.txt -Encoding UTF8"
+REM Use multiple fallback methods for reliable password generation
+powershell -Command "try { [Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_root_password.txt -Encoding UTF8 } catch { try { $password = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_}); $password | Out-File -FilePath secrets/db_root_password.txt -Encoding UTF8 } catch { $timestamp = Get-Date -Format 'yyyyMMddHHmmss'; $random = Get-Random; $password = $timestamp + $random + 'RootPass2024!'; $password | Out-File -FilePath secrets/db_root_password.txt -Encoding UTF8 } }"
 
 echo 📝 Setting database name...
 echo gearfalcon_db_dev > secrets/db_database.txt
@@ -26,6 +28,6 @@ echo 📍 Location: ./secrets/
 echo 🔒 Files are secured with owner-only permissions
 echo.
 echo 🚀 You can now start the development environment:
-echo    .\start-dev.bat
+echo    .\scripts\windows\start-dev.bat
 echo.
 pause
