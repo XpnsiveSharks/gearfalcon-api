@@ -56,14 +56,14 @@ services:
       - ./src:/var/www/html/src:ro
       - ./public:/var/www/html/public:ro
       - ./debug:/var/www/html/debug:ro
-      - ./.env.development:/var/www/html/.env.development:ro
+      - ./.env.development:/var/www/html/.env:ro
     environment:
       - APP_ENV=development
       - DB_HOST=db
       - DB_PORT=3306
       - DB_DATABASE=gearfalcon_db_dev
       - DB_USERNAME=gearfalcon_user
-      - DB_PASSWORD=gearfalcon_password
+      - DB_PASSWORD=KdZZnyXp/HtUSq6HNFbw0e516id1xDNCNDHdt1+Swb8=
     depends_on:
       db:
         condition: service_healthy
