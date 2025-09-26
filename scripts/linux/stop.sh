@@ -17,10 +17,24 @@ if ! docker --version >/dev/null 2>&1; then
 fi
 echo "✅ Docker is available"
 
-# Navigate to script directory
+# Check if docker-compose is available (try v2 first, then v1)
+echo "[2/4] Checking Docker Compose..."
+COMPOSE_CMD=""
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif docker-compose --version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    echo "⚠️  Docker Compose not found, but continuing with stop operations..."
+    COMPOSE_CMD="docker-compose"  # fallback
+fi
+
+# Navigate to project root directory (parent of scripts directory)
 echo "[2/4] Setting up environment..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SCRIPTS_DIR")"
+cd "$PROJECT_ROOT"
 if [ $? -ne 0 ]; then
     echo "❌ Failed to change directory!"
     read -p "Press Enter to continue..."
@@ -42,11 +56,11 @@ echo "(This may take up to 30 seconds)"
 echo ""
 
 # First, try graceful shutdown
-docker-compose down --timeout 30 2>/dev/null
+$COMPOSE_CMD down --timeout 30 2>/dev/null
 
 # Check for orphaned containers and clean them up
 echo "[4/4] Cleaning up orphaned containers..."
-docker-compose ps --quiet 2>/dev/null | while read -r container; do
+$COMPOSE_CMD ps --quiet 2>/dev/null | while read -r container; do
     if [ -n "$container" ]; then
         docker stop "$container" --time 10 >/dev/null 2>&1
         docker rm "$container" >/dev/null 2>&1
@@ -60,11 +74,11 @@ done
 
 # Verify all services are stopped
 sleep 3
-docker-compose ps --quiet 2>/dev/null | grep -q . && echo "⚠️  Some services may still be running." || echo "✅ All services stopped successfully!"
+$COMPOSE_CMD ps --quiet 2>/dev/null | grep -q . && echo "⚠️  Some services may still be running." || echo "✅ All services stopped successfully!"
 
 echo ""
 echo "📊 System Status:"
-if docker-compose ps --quiet 2>/dev/null | grep -q .; then
+if $COMPOSE_CMD ps --quiet 2>/dev/null | grep -q .; then
     echo "    • Some containers still active"
 else
     echo "    • No containers running"
@@ -79,11 +93,11 @@ done
 
 echo ""
 echo "🚀 To start services again:"
-echo "    • Development: ./start-dev.sh"
-echo "    • Production:  ./start-prod.sh"
+echo "    • Development: ./scripts/linux/start-dev.sh"
+echo "    • Production:  ./scripts/linux/start-prod.sh"
 echo ""
 echo "🛠️  Maintenance Commands:"
-echo "    docker-compose logs -f          - View all logs"
+echo "    $COMPOSE_CMD logs -f          - View all logs"
 echo "    docker system prune             - Clean up unused resources"
 echo "    docker volume prune             - Remove unused volumes"
 echo ""

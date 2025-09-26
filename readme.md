@@ -18,11 +18,13 @@ A full-stack service management application with Next.js frontend and PHP backen
 #### Linux/Ubuntu
 ```bash
 # 1. Generate your own Docker secrets (one-time setup)
-./scripts/linux/generate-secrets.sh
+sudo ./scripts/linux/generate-secrets.sh
 
 # 2. Start all services with hot reload
-./scripts/linux/start-dev.sh
+sudo ./scripts/linux/start-dev.sh
 ```
+
+**Note:** Use `sudo` if you encounter Docker permission errors. Alternatively, add your user to the docker group: `sudo usermod -aG docker $USER` (requires logout/login).
 
 **Access Points:**
 - **Frontend**: http://localhost:3000 (Next.js with hot reload)
@@ -32,7 +34,7 @@ A full-stack service management application with Next.js frontend and PHP backen
 ### 🔐 Team Setup
 Each team member must generate their own Docker secrets for local development:
 1. **Windows**: Run `.\scripts\windows\generate-secrets.bat` to create secure credentials
-2. **Linux**: Run `./scripts/linux/generate-secrets.sh` to create secure credentials
+2. **Linux**: Run `sudo ./scripts/linux/generate-secrets.sh` to create secure credentials
 3. Secrets are automatically configured with proper security permissions
 4. **Never commit secrets to git** - they stay local to your machine
 

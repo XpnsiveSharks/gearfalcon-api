@@ -17,20 +17,28 @@ if ! docker --version >/dev/null 2>&1; then
 fi
 echo "✅ Docker is available"
 
-# Check if docker-compose is available
+# Check if docker-compose is available (try v2 first, then v1)
 echo "[2/6] Checking Docker Compose..."
-if ! docker-compose --version >/dev/null 2>&1; then
+COMPOSE_CMD=""
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+    echo "✅ Docker Compose v2 is available"
+elif docker-compose --version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+    echo "✅ Docker Compose v1 is available"
+else
     echo "❌ Docker Compose is not available!"
     echo "Please ensure Docker Compose is installed."
     read -p "Press Enter to continue..."
     exit 1
 fi
-echo "✅ Docker Compose is available"
 
-# Navigate to script directory
+# Navigate to project root directory (parent of scripts directory)
 echo "[3/6] Setting up environment..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SCRIPTS_DIR")"
+cd "$PROJECT_ROOT"
 if [ $? -ne 0 ]; then
     echo "❌ Failed to change directory!"
     read -p "Press Enter to continue..."
@@ -97,7 +105,7 @@ echo "[5/6] Building and starting production services..."
 echo "(This may take several minutes on first run)"
 echo ""
 
-docker-compose -f docker-compose.prod.yml up --build -d
+$COMPOSE_CMD -f docker-compose.prod.yml up --build -d
 
 # Wait for services to initialize
 echo ""
@@ -106,11 +114,11 @@ sleep 15
 echo "Checking service status..."
 
 # Check if containers are running
-if ! docker-compose -f docker-compose.prod.yml ps --quiet | grep -q .; then
+if ! $COMPOSE_CMD -f docker-compose.prod.yml ps --quiet | grep -q .; then
     echo "❌ Services failed to start properly!"
     echo "Checking logs for errors..."
     sleep 3
-    docker-compose -f docker-compose.prod.yml logs --tail=50
+    $COMPOSE_CMD -f docker-compose.prod.yml logs --tail=50
     read -p "Press Enter to continue..."
     exit 1
 fi
@@ -152,9 +160,9 @@ fi
 
 echo ""
 echo "📊 Monitoring Commands:"
-echo "    docker-compose -f docker-compose.prod.yml logs -f    - View all logs"
-echo "    docker-compose -f docker-compose.prod.yml logs [service] - View specific logs"
-echo "    docker-compose -f docker-compose.prod.yml ps         - Check service status"
+echo "    $COMPOSE_CMD -f docker-compose.prod.yml logs -f    - View all logs"
+echo "    $COMPOSE_CMD -f docker-compose.prod.yml logs [service] - View specific logs"
+echo "    $COMPOSE_CMD -f docker-compose.prod.yml ps         - Check service status"
 echo "    docker stats                                          - Monitor resource usage"
 echo ""
 echo "🛑 To stop services:"

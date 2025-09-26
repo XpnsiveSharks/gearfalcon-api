@@ -24,17 +24,19 @@ This guide explains how to use the improved Docker Compose configuration with se
 #### Linux/Ubuntu
 ```bash
 # Development Environment
-./scripts/linux/start-dev.sh
+sudo ./scripts/linux/start-dev.sh
 
 # Production Environment
-./scripts/linux/start-prod.sh
+sudo ./scripts/linux/start-prod.sh
 
 # Stop all services
-./scripts/linux/stop.sh
+sudo ./scripts/linux/stop.sh
 
 # View logs and monitor
-./scripts/linux/logs.sh
+sudo ./scripts/linux/logs.sh
 ```
+
+**Note:** Use `sudo` if you encounter Docker permission errors. Alternatively, add your user to the docker group: `sudo usermod -aG docker $USER` (requires logout/login).
 
 ### Using Docker Commands (Advanced)
 ```bash
@@ -227,16 +229,16 @@ export MYSQL_USER="your-db-user"
 #### Linux/Ubuntu
 ```bash
 # Quick service status and health check
-./scripts/linux/logs.sh status
+sudo ./scripts/linux/logs.sh status
 
 # View all logs with auto-follow
-./scripts/linux/logs.sh dev
+sudo ./scripts/linux/logs.sh dev
 
 # Check service health
-./scripts/linux/logs.sh health
+sudo ./scripts/linux/logs.sh health
 
 # Clean up Docker resources
-./scripts/linux/logs.sh cleanup
+sudo ./scripts/linux/logs.sh cleanup
 ```
 
 ### Using Docker Commands (Advanced)
@@ -325,30 +327,30 @@ To update secrets:
   - [ ] `secrets/db_root_password.txt`
   - [ ] `secrets/db_password.txt`
   - [ ] `secrets/db_database.txt`
-- [ ] Test development environment: `.\scripts\windows\start-dev.bat` (Windows) or `./scripts/linux/start-dev.sh` (Linux)
-- [ ] Verify health checks work: `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux)
+- [ ] Test development environment: `.\scripts\windows\start-dev.bat` (Windows) or `sudo ./scripts/linux/start-dev.sh` (Linux)
+- [ ] Verify health checks work: `.\scripts\windows\logs.bat health` (Windows) or `sudo ./scripts/linux/logs.sh health` (Linux)
 - [ ] Check resource limits are appropriate for your infrastructure
 
 ### **Production Deployment**
-- [ ] Use production startup script: `.\scripts\windows\start-prod.bat` (Windows) or `./scripts/linux/start-prod.sh` (Linux)
+- [ ] Use production startup script: `.\scripts\windows\start-prod.bat` (Windows) or `sudo ./scripts/linux/start-prod.sh` (Linux)
 - [ ] Verify all services start successfully
 - [ ] Test health endpoints:
   - [ ] Frontend: `http://localhost:3000/api/health`
   - [ ] Backend: `http://localhost:8080/health`
-- [ ] Monitor logs: `.\scripts\windows\logs.bat prod` (Windows) or `./scripts/linux/logs.sh prod` (Linux)
-- [ ] Check service status: `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux)
+- [ ] Monitor logs: `.\scripts\windows\logs.bat prod` (Windows) or `sudo ./scripts/linux/logs.sh prod` (Linux)
+- [ ] Check service status: `.\scripts\windows\logs.bat status` (Windows) or `sudo ./scripts/linux/logs.sh status` (Linux)
 
 ### **Post-Deployment**
-- [ ] Verify logging configuration with `.\scripts\windows\logs.bat prod` (Windows) or `./scripts/linux/logs.sh prod` (Linux)
+- [ ] Verify logging configuration with `.\scripts\windows\logs.bat prod` (Windows) or `sudo ./scripts/linux/logs.sh prod` (Linux)
 - [ ] Test backup and recovery procedures
 - [ ] Monitor resource usage: `docker stats`
 - [ ] Set up log rotation monitoring
 - [ ] Document any environment-specific configurations
 
 ### **Maintenance**
-- [ ] Regular health checks: `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux)
-- [ ] Monitor resource usage: `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux)
-- [ ] Clean up resources periodically: `.\scripts\windows\logs.bat cleanup` (Windows) or `./scripts/linux/logs.sh cleanup` (Linux)
+- [ ] Regular health checks: `.\scripts\windows\logs.bat health` (Windows) or `sudo ./scripts/linux/logs.sh health` (Linux)
+- [ ] Monitor resource usage: `.\scripts\windows\logs.bat status` (Windows) or `sudo ./scripts/linux/logs.sh status` (Linux)
+- [ ] Clean up resources periodically: `.\scripts\windows\logs.bat cleanup` (Windows) or `sudo ./scripts/linux/logs.sh cleanup` (Linux)
 - [ ] Update secrets rotation schedule
 - [ ] Review and update resource limits as needed
 
@@ -374,16 +376,16 @@ To update secrets:
 #### Linux/Ubuntu
 ```bash
 # Start development environment
-./scripts/linux/start-dev.sh
+sudo ./scripts/linux/start-dev.sh
 
 # Monitor logs during development
-./scripts/linux/logs.sh dev
+sudo ./scripts/linux/logs.sh dev
 
 # Check service health
-./scripts/linux/logs.sh health
+sudo ./scripts/linux/logs.sh health
 
 # Stop all services
-./scripts/linux/stop.sh
+sudo ./scripts/linux/stop.sh
 ```
 
 ### **Production Workflow**
@@ -406,16 +408,16 @@ To update secrets:
 #### Linux/Ubuntu
 ```bash
 # Start production environment
-./scripts/linux/start-prod.sh
+sudo ./scripts/linux/start-prod.sh
 
 # Monitor production logs
-./scripts/linux/logs.sh prod
+sudo ./scripts/linux/logs.sh prod
 
 # Check system status
-./scripts/linux/logs.sh status
+sudo ./scripts/linux/logs.sh status
 
 # Graceful shutdown
-./scripts/linux/stop.sh
+sudo ./scripts/linux/stop.sh
 ```
 
 ### **Maintenance Tasks**
@@ -435,10 +437,10 @@ docker stats
 #### Linux/Ubuntu
 ```bash
 # Clean up Docker resources
-./scripts/linux/logs.sh cleanup
+sudo ./scripts/linux/logs.sh cleanup
 
 # Check all service health
-./scripts/linux/logs.sh health
+sudo ./scripts/linux/logs.sh health
 
 # View resource usage
 docker stats

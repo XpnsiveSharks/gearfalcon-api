@@ -17,20 +17,28 @@ if ! docker --version >/dev/null 2>&1; then
 fi
 echo "✅ Docker is available"
 
-# Check if docker-compose is available
+# Check if docker-compose is available (try v2 first, then v1)
 echo "[2/5] Checking Docker Compose..."
-if ! docker-compose --version >/dev/null 2>&1; then
+COMPOSE_CMD=""
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+    echo "✅ Docker Compose v2 is available"
+elif docker-compose --version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+    echo "✅ Docker Compose v1 is available"
+else
     echo "❌ Docker Compose is not available!"
     echo "Please ensure Docker Compose is installed."
     read -p "Press Enter to continue..."
     exit 1
 fi
-echo "✅ Docker Compose is available"
 
-# Navigate to script directory
+# Navigate to project root directory (parent of scripts directory)
 echo "[3/5] Setting up environment..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SCRIPTS_DIR")"
+cd "$PROJECT_ROOT"
 if [ $? -ne 0 ]; then
     echo "❌ Failed to change directory!"
     read -p "Press Enter to continue..."
@@ -54,9 +62,9 @@ echo "    Backend:  http://localhost:8080"
 echo "    Health Check: http://localhost:8080/health"
 echo ""
 echo "📊 Monitoring Commands:"
-echo "    View logs:      docker-compose logs -f"
-echo "    Check status:   docker-compose ps"
-echo "    Stop services:  Ctrl+C or ./stop.sh"
+echo "    View logs:      $COMPOSE_CMD logs -f"
+echo "    Check status:   $COMPOSE_CMD ps"
+echo "    Stop services:  Ctrl+C or ./scripts/linux/stop.sh"
 echo ""
 
 # Start services with build
@@ -64,7 +72,7 @@ echo "[4/5] Building and starting services..."
 echo "(This may take several minutes on first run)"
 echo ""
 
-docker-compose up --build
+$COMPOSE_CMD up --build
 
 # Check if services started successfully
 echo ""
@@ -72,7 +80,7 @@ echo "[5/5] Verifying services..."
 sleep 10
 
 # Check if containers are running
-if ! docker-compose ps --quiet | grep -q .; then
+if ! $COMPOSE_CMD ps --quiet | grep -q .; then
     echo "❌ Services failed to start properly!"
     echo "Check the logs above for errors."
     read -p "Press Enter to continue..."
@@ -88,10 +96,10 @@ echo "    • Backend (PHP)      - http://localhost:8080"
 echo "    • Database (MySQL)   - Internal only"
 echo ""
 echo "📋 Useful Commands:"
-echo "    docker-compose logs -f     - View all logs"
-echo "    docker-compose logs [service] - View specific service logs"
-echo "    docker-compose down        - Stop all services"
-echo "    docker-compose restart     - Restart all services"
+echo "    $COMPOSE_CMD logs -f     - View all logs"
+echo "    $COMPOSE_CMD logs [service] - View specific service logs"
+echo "    $COMPOSE_CMD down        - Stop all services"
+echo "    $COMPOSE_CMD restart     - Restart all services"
 echo ""
 echo "Press Ctrl+C to stop all services..."
 echo ""
