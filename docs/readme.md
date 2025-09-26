@@ -1,15 +1,15 @@
-# 📚 GearFalcon Documentation Index
+# 📚 GearFalcon Documentation Hub
 
-This folder contains all documentation for the GearFalcon project. Below is an overview of what you'll find in each document. 
+This is your central navigation point for all GearFalcon project documentation. Each document serves a specific purpose for different audiences and use cases.
 
 ## 📖 Documentation Overview
 
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| **[Main Documentation](README.md)** | Complete setup and usage guide | All users |
-| **[Docker Guide](README-Docker.md)** | Containerization and deployment | Developers, DevOps |
-| **[Architecture](ARCHITECTURE.md)** | System architecture and design patterns | Developers, Architects |
-| **[API Documentation](API/README.md)** | API endpoints and integration guide | Developers, Integrators |
+| Document | Purpose | Audience | Key Topics |
+|----------|---------|----------|------------|
+| **[📋 README.md](../README.md)** | Project overview & quick start | All users | Setup, features, structure |
+| **[🐳 Docker Guide](README-Docker.md)** | Containerization & deployment | Developers, DevOps | Docker setup, security, troubleshooting |
+| **[🏗️ Architecture](ARCHITECTURE.md)** | System design & patterns | Developers, Architects | Clean architecture, data flow, best practices |
+| **[🔌 API Documentation](API/README.md)** | API integration guide | Developers, Integrators | Endpoints, authentication, examples |
 
 ## 🚀 Quick Start Guides
 
@@ -97,13 +97,13 @@ composer install
 
 ```
 docs/
-├── README.md                    # This index file
+├── README.md                    # This navigation hub
 ├── README-Docker.md            # Containerization guide
 ├── ARCHITECTURE.md             # System architecture
-├── DOCKER_README.md            # Comprehensive Docker setup guide
-└── API/                        # API documentation
-    ├── README.md               # API integration guide
-    └── GearFalcon_API.postman_collection.json
+├── API/                        # API documentation
+│   ├── README.md               # API integration guide
+│   └── GearFalcon_API.postman_collection.json
+└── DOCKER_README.md            # Comprehensive Docker setup guide
 
 # Project root files
 ├── start-dev.bat               # Development startup script

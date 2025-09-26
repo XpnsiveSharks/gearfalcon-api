@@ -1,8 +1,8 @@
 -- Step 1: Create the database
-CREATE DATABASE IF NOT EXISTS gearfalcon_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS gearfalcon_db_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Step 2: Use the database
-USE gearfalcon_db;
+USE gearfalcon_db_dev;
 
 -- Step 3: Now create your tables
 -- USERS (Updated with email verification fields)
