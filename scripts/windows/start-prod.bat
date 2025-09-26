@@ -30,9 +30,9 @@ if errorlevel 1 (
 )
 echo ✅ Docker Compose is available
 
-:: Navigate to script directory
+:: Navigate to project root directory (parent of scripts directory)
 echo [3/6] Setting up environment...
-cd /d "%~dp0"
+cd /d "%~dp0\..\.."
 if errorlevel 1 (
     echo ❌ Failed to change directory!
     pause
@@ -99,7 +99,7 @@ echo [5/6] Building and starting production services...
 echo (This may take several minutes on first run)
 echo.
 
-docker-compose -f docker-compose.prod.yml up --build -d
+docker-compose -f docker-compose.windows.yml up --build -d
 
 :: Wait for services to initialize
 echo.
@@ -108,12 +108,12 @@ timeout /t 15 /nobreak >nul
 echo Checking service status...
 
 :: Check if containers are running
-docker-compose -f docker-compose.prod.yml ps --quiet | findstr . >nul 2>&1
+docker-compose -f docker-compose.windows.yml ps --quiet | findstr . >nul 2>&1
 if errorlevel 1 (
     echo ❌ Services failed to start properly!
     echo Checking logs for errors...
     timeout /t 3 /nobreak >nul
-    docker-compose -f docker-compose.prod.yml logs --tail=50
+    docker-compose -f docker-compose.windows.yml logs --tail=50
     pause
     exit /b 1
 )
@@ -157,9 +157,9 @@ if !healthy_services! geq 2 (
 
 echo.
 echo 📊 Monitoring Commands:
-echo    docker-compose -f docker-compose.prod.yml logs -f    - View all logs
-echo    docker-compose -f docker-compose.prod.yml logs [service] - View specific logs
-echo    docker-compose -f docker-compose.prod.yml ps         - Check service status
+echo    docker-compose -f docker-compose.windows.yml logs -f    - View all logs
+echo    docker-compose -f docker-compose.windows.yml logs [service] - View specific logs
+echo    docker-compose -f docker-compose.windows.yml ps         - Check service status
 echo    docker stats                                          - Monitor resource usage
 echo.
 

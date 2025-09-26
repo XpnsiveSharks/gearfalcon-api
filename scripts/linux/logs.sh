@@ -21,6 +21,29 @@ else
     exit 1
 fi
 
+# Function for health check
+check_health() {
+    HEALTH_URL="$1"
+    SERVICE_NAME="$2"
+
+    echo "  $SERVICE_NAME: $HEALTH_URL"
+
+    # Use curl with proper headers, timeout, and save response
+    if curl -f -s --max-time 10 --header "Accept: application/json" "$HEALTH_URL" > "$TEMP_FILE" 2>/dev/null; then
+        # Check if response contains expected JSON structure
+        if grep -q '"status"' "$TEMP_FILE"; then
+            echo "✅ $SERVICE_NAME OK"
+        else
+            echo "❌ $SERVICE_NAME FAILED - Invalid response format"
+            echo "Response received:"
+            cat "$TEMP_FILE"
+            echo ""
+        fi
+    else
+        echo "❌ $SERVICE_NAME FAILED - No response or timeout"
+    fi
+}
+
 if [ "$1" == "dev" ]; then
     echo "📋 GearFalcon Development Logs"
     echo "=============================="
@@ -153,26 +176,3 @@ else
     echo "Press any key to exit..."
     read -n1
 fi
-
-# Function for health check
-check_health() {
-    HEALTH_URL="$1"
-    SERVICE_NAME="$2"
-
-    echo "  $SERVICE_NAME: $HEALTH_URL"
-
-    # Use curl with proper headers, timeout, and save response
-    if curl -f -s --max-time 10 --header "Accept: application/json" "$HEALTH_URL" > "$TEMP_FILE" 2>/dev/null; then
-        # Check if response contains expected JSON structure
-        if grep -q '"status"' "$TEMP_FILE"; then
-            echo "✅ $SERVICE_NAME OK"
-        else
-            echo "❌ $SERVICE_NAME FAILED - Invalid response format"
-            echo "Response received:"
-            cat "$TEMP_FILE"
-            echo ""
-        fi
-    else
-        echo "❌ $SERVICE_NAME FAILED - No response or timeout"
-    fi
-}
