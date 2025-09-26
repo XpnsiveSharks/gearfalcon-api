@@ -1,24 +1,48 @@
 {
   "info": {
     "name": "GearFalcon API",
+    "_postman_id": "gearfalcon-api-collection",
     "description": "Postman collection for GearFalcon API endpoints",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Welcome",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://gearfalcon.test/",
-          "protocol": "http",
-          "host": ["gearfalcon", "test"]
+      "name": "Home",
+      "item": [
+        {
+          "name": "Welcome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/",
+              "protocol": "http",
+              "host": "localhost",
+              "port": "8080",
+              "path": []
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/health",
+              "protocol": "http",
+              "host": "localhost",
+              "port": "8080",
+              "path": ["health"]
+            },
+            "response": []
+          }
         }
-      }
+      ]
     },
     {
-      "name": "Auth",
+      "name": "Authentication",
       "item": [
         {
           "name": "Login",
@@ -35,11 +59,13 @@
               "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"secret\"\n}"
             },
             "url": {
-              "raw": "http://gearfalcon.test/auth/login",
+              "raw": "http://localhost:8080/auth/login",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["auth", "login"]
-            }
+            },
+            "response": []
           }
         },
         {
@@ -57,30 +83,80 @@
               "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"secret\",\n  \"phone\": \"09123476453\"\n}"
             },
             "url": {
-              "raw": "http://gearfalcon.test/auth/register",
+              "raw": "http://localhost:8080/auth/register",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["auth", "register"]
-            }
+            },
+            "response": []
           }
         },
         {
           "name": "Logout",
           "request": {
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "http://gearfalcon.test/auth/logout",
+              "raw": "http://localhost:8080/auth/logout",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["auth", "logout"]
-            }
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"verification_code\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/verify-email",
+              "protocol": "http",
+              "host": "localhost",
+              "port": "8080",
+              "path": ["auth", "verify-email"]
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "Resend Verification Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/resend-verification",
+              "protocol": "http",
+              "host": "localhost",
+              "port": "8080",
+              "path": ["auth", "resend-verification"]
+            },
+            "response": []
           }
         }
       ]
     },
-    
-
-    
     {
       "name": "Quotes",
       "item": [
@@ -99,59 +175,73 @@
               "raw": "{\n  \"service\": \"Plumbing\",\n  \"description\": \"Fix leaking pipe\"\n}"
             },
             "url": {
-              "raw": "http://gearfalcon.test/quotes",
+              "raw": "http://localhost:8080/quotes",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["quotes"]
-            }
+            },
+            "response": []
           }
         },
         {
           "name": "Accept Quote",
           "request": {
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "http://gearfalcon.test/quotes/1/accept",
+              "raw": "http://localhost:8080/quotes/1/accept",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["quotes", "1", "accept"]
-            }
+            },
+            "response": []
           }
         },
         {
           "name": "Reject Quote",
           "request": {
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "http://gearfalcon.test/quotes/1/reject",
+              "raw": "http://localhost:8080/quotes/1/reject",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["quotes", "1", "reject"]
-            }
+            },
+            "response": []
           }
         },
         {
-          "name": "Active Quotes",
+          "name": "Get Active Quotes",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "http://gearfalcon.test/quotes/active",
+              "raw": "http://localhost:8080/quotes/active",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["quotes", "active"]
-            }
+            },
+            "response": []
           }
         },
         {
-          "name": "Customer Quotes",
+          "name": "Get Customer Quotes",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "http://gearfalcon.test/customers/1/quotes",
+              "raw": "http://localhost:8080/customers/1/quotes",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["customers", "1", "quotes"]
-            }
+            },
+            "response": []
           }
         }
       ]
@@ -160,7 +250,7 @@
       "name": "Admin",
       "item": [
         {
-          "name": "Promote Technician",
+          "name": "Promote to Technician",
           "request": {
             "method": "POST",
             "header": [
@@ -174,26 +264,31 @@
               "raw": "{\n  \"user_id\": \"8b64c935-5151-4450-9412-821549f1d57a\",\n  \"specialization\": \"Plumbing\",\n  \"experience\": 5\n}"
             },
             "url": {
-              "raw": "http://gearfalcon.test/admin/technicians/promote",
+              "raw": "http://localhost:8080/admin/technicians/promote",
               "protocol": "http",
-              "host": ["gearfalcon", "test"],
+              "host": "localhost",
+              "port": "8080",
               "path": ["admin", "technicians", "promote"]
-            }
+            },
+            "response": []
           }
         },
         {
-          "name": "Categories",
+          "name": "Service Categories",
           "item": [
             {
               "name": "List Categories",
               "request": {
                 "method": "GET",
+                "header": [],
                 "url": {
-                  "raw": "http://gearfalcon.test/admin/categories",
+                  "raw": "http://localhost:8080/admin/categories",
                   "protocol": "http",
-                  "host": ["gearfalcon", "test"],
+                  "host": "localhost",
+                  "port": "8080",
                   "path": ["admin", "categories"]
-                }
+                },
+                "response": []
               }
             },
             {
@@ -211,11 +306,13 @@
                   "raw": "{\n  \"name\": \"Plumbing\"\n}"
                 },
                 "url": {
-                  "raw": "http://gearfalcon.test/admin/categories",
+                  "raw": "http://localhost:8080/admin/categories",
                   "protocol": "http",
-                  "host": ["gearfalcon", "test"],
+                  "host": "localhost",
+                  "port": "8080",
                   "path": ["admin", "categories"]
-                }
+                },
+                "response": []
               }
             },
             {
@@ -233,28 +330,43 @@
                   "raw": "{\n  \"name\": \"Updated Plumbing\"\n}"
                 },
                 "url": {
-                  "raw": "http://gearfalcon.test/admin/categories/1",
+                  "raw": "http://localhost:8080/admin/categories/1",
                   "protocol": "http",
-                  "host": ["gearfalcon", "test"],
+                  "host": "localhost",
+                  "port": "8080",
                   "path": ["admin", "categories", "1"]
-                }
+                },
+                "response": []
               }
             },
             {
               "name": "Delete Category (Soft)",
               "request": {
                 "method": "DELETE",
+                "header": [],
                 "url": {
-                  "raw": "http://gearfalcon.test/admin/categories/1",
+                  "raw": "http://localhost:8080/admin/categories/1",
                   "protocol": "http",
-                  "host": ["gearfalcon", "test"],
+                  "host": "localhost",
+                  "port": "8080",
                   "path": ["admin", "categories", "1"]
-                }
+                },
+                "response": []
               }
             }
           ]
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "access_token",
+      "value": ""
     }
   ]
 }
