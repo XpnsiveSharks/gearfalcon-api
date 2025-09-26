@@ -63,7 +63,7 @@ services:
       - DB_PORT=3306
       - DB_DATABASE=gearfalcon_db_dev
       - DB_USERNAME=gearfalcon_user
-      - DB_PASSWORD=KdZZnyXp/HtUSq6HNFbw0e516id1xDNCNDHdt1+Swb8=
+      - DB_PASSWORD=SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC
     depends_on:
       db:
         condition: service_healthy
@@ -98,18 +98,15 @@ services:
     image: mysql:8.0
     # REMOVED: ports: - "3306:3306"  # Database no longer exposed to host
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_ROOT_PASSWORD: FjmsJMI5cU1HpdNROGkBYh8aErWDLZSV
       MYSQL_DATABASE: gearfalcon_db_dev
       MYSQL_USER: gearfalcon_user
-      MYSQL_PASSWORD_FILE: /run/secrets/db_password
-    secrets:
-      - db_root_password
-      - db_password
+      MYSQL_PASSWORD: SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC
     volumes:
       - mysql_data:/var/lib/mysql
       - ./gearfalcon_db.sql:/docker-entrypoint-initdb.d/gearfalcon_db.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pFjmsJMI5cU1HpdNROGkBYh8aErWDLZSV"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -133,12 +130,6 @@ services:
       - "app=gearfalcon"
       - "service=database"
       - "environment=development"
-
-secrets:
-  db_root_password:
-    file: ./secrets/db_root_password.txt
-  db_password:
-    file: ./secrets/db_password.txt
 
 volumes:
   mysql_data:
