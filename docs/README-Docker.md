@@ -36,17 +36,19 @@ This guide explains how to run both the Next.js frontend and PHP backend using D
 #### Linux/Ubuntu
 ```bash
 # Start development mode with full validation
-./scripts/linux/start-dev.sh
+sudo ./scripts/linux/start-dev.sh
 
 # Start production mode with security checks
-./scripts/linux/start-prod.sh
+sudo ./scripts/linux/start-prod.sh
 
 # Stop all services with cleanup
-./scripts/linux/stop.sh
+sudo ./scripts/linux/stop.sh
 
 # View logs and monitor services
-./scripts/linux/logs.sh
+sudo ./scripts/linux/logs.sh
 ```
+
+**Note:** Use `sudo` if you encounter Docker permission errors. Alternatively, add your user to the docker group: `sudo usermod -aG docker $USER` (requires logout/login).
 
 ### Using Docker Commands (Advanced)
 
@@ -213,16 +215,16 @@ docker-compose up --build -d
 #### Linux/Ubuntu
 ```bash
 # Quick service status and health check
-./scripts/linux/logs.sh status
+sudo ./scripts/linux/logs.sh status
 
 # View all logs with auto-follow
-./scripts/linux/logs.sh dev
+sudo ./scripts/linux/logs.sh dev
 
 # Check service health
-./scripts/linux/logs.sh health
+sudo ./scripts/linux/logs.sh health
 
 # Clean up Docker resources
-./scripts/linux/logs.sh cleanup
+sudo ./scripts/linux/logs.sh cleanup
 ```
 
 ### Common Issues
@@ -231,7 +233,7 @@ docker-compose up --build -d
 2. **Permission issues**: Make sure Docker has proper permissions (Windows: Docker Desktop, Linux: user in docker group)
 3. **Path not found**: Ensure the frontend path in docker-compose.yml is correct
 4. **Secrets missing**: Production startup will fail if secrets/ directory is missing
-5. **Health check failures**: Services may take time to start - check logs with `.\scripts\windows\logs.bat` (Windows) or `./scripts/linux/logs.sh` (Linux)
+5. **Health check failures**: Services may take time to start - check logs with `.\scripts\windows\logs.bat` (Windows) or `sudo ./scripts/linux/logs.sh` (Linux)
 
 ### 🔐 Secrets-Related Issues
 
@@ -246,7 +248,7 @@ docker-compose up --build -d
 ##### Linux/Ubuntu
 ```bash
 # Solution: Generate secrets first
-./scripts/linux/generate-secrets.sh
+sudo ./scripts/linux/generate-secrets.sh
 ```
 
 #### **Issue: "Permission denied" on secrets files**
@@ -273,7 +275,7 @@ git push --force-with-lease
 
 # Generate new secrets
 # Windows: .\scripts\windows\generate-secrets.bat
-# Linux: ./scripts/linux/generate-secrets.sh
+# Linux: sudo ./scripts/linux/generate-secrets.sh
 ```
 
 #### **Issue: Database connection errors**
@@ -295,7 +297,7 @@ cat secrets/db_password.txt
 # Should contain only the password, no extra characters
 
 # Regenerate if needed
-./scripts/linux/generate-secrets.sh
+sudo ./scripts/linux/generate-secrets.sh
 ```
 
 #### **Issue: Team member can't start services**
@@ -312,10 +314,10 @@ cat secrets/db_password.txt
 ##### Linux/Ubuntu
 ```bash
 # Solution: Each team member needs their own secrets
-./scripts/linux/generate-secrets.sh
+sudo ./scripts/linux/generate-secrets.sh
 
 # Verify setup
-./scripts/linux/logs.sh health
+sudo ./scripts/linux/logs.sh health
 ```
 
 ### Docker Commands
@@ -373,7 +375,7 @@ echo "gearfalcon_db_dev" > secrets/db_database.txt
 #### Linux/Ubuntu
 ```bash
 # Option 1: Use the automated script (recommended)
-./scripts/linux/generate-secrets.sh
+sudo ./scripts/linux/generate-secrets.sh
 
 # Option 2: Generate manually
 openssl rand -base64 32 > secrets/db_password.txt
@@ -405,7 +407,7 @@ curl http://localhost:3000/api/health
 ##### Linux/Ubuntu
 ```bash
 # Check that secrets are properly configured
-./scripts/linux/logs.sh health
+sudo ./scripts/linux/logs.sh health
 
 # Or manually verify
 curl http://localhost:8080/health
@@ -479,7 +481,7 @@ echo "📍 Location: ./secrets/"
 echo "🔒 Files are secured with owner-only permissions"
 echo ""
 echo "🚀 You can now start the development environment:"
-echo "    ./scripts/linux/start-dev.sh"
+echo "    sudo ./scripts/linux/start-dev.sh"
 echo ""
 read -p "Press Enter to continue..."
 ```
@@ -553,7 +555,7 @@ ls -la secrets/
 - **Volume optimization**: Read-only mounts where appropriate
 
 ### Additional Recommendations
-- Monitor resource usage with `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux)
+- Monitor resource usage with `.\scripts\windows\logs.bat status` (Windows) or `sudo ./scripts/linux/logs.sh status` (Linux)
 - Scale resource limits based on actual usage patterns
 - Consider using Docker build cache mounts for faster builds
 - Use production-optimized base images (already implemented)
@@ -564,10 +566,10 @@ ls -la secrets/
 
 If you encounter issues:
 
-1. **Quick diagnostics**: Use `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux) to check service health
-2. **View logs**: Use `.\scripts\windows\logs.bat dev` (Windows) or `./scripts/linux/logs.sh dev` (Linux) for development logs, or `prod` for production logs
-3. **Check health**: Use `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux) to verify all services are responding
-4. **Clean restart**: Use `.\scripts\windows\stop.bat` then `.\scripts\windows\start-dev.bat` (Windows) or `./scripts/linux/stop.sh` then `./scripts/linux/start-dev.sh` (Linux) for a clean restart
+1. **Quick diagnostics**: Use `.\scripts\windows\logs.bat status` (Windows) or `sudo ./scripts/linux/logs.sh status` (Linux) to check service health
+2. **View logs**: Use `.\scripts\windows\logs.bat dev` (Windows) or `sudo ./scripts/linux/logs.sh dev` (Linux) for development logs, or `prod` for production logs
+3. **Check health**: Use `.\scripts\windows\logs.bat health` (Windows) or `sudo ./scripts/linux/logs.sh health` (Linux) to verify all services are responding
+4. **Clean restart**: Use `.\scripts\windows\stop.bat` then `.\scripts\windows\start-dev.bat` (Windows) or `sudo ./scripts/linux/stop.sh` then `sudo ./scripts/linux/start-dev.sh` (Linux) for a clean restart
 
 ### 📋 Advanced Troubleshooting
 
@@ -646,10 +648,10 @@ git clone <repository-url>
 cd gearfalcon-app
 
 # 2. Generate your own secrets
-./scripts/linux/generate-secrets.sh
+sudo ./scripts/linux/generate-secrets.sh
 
 # 3. Start development environment
-./scripts/linux/start-dev.sh
+sudo ./scripts/linux/start-dev.sh
 ```
 
 #### **Daily Development Workflow**
@@ -676,20 +678,20 @@ cd gearfalcon-app
 ##### Linux/Ubuntu
 ```bash
 # Start services
-./scripts/linux/start-dev.sh
+sudo ./scripts/linux/start-dev.sh
 
 # Make your changes
 # Frontend: Changes auto-reload at http://localhost:3000
 # Backend: Restart container for PHP changes
 
 # Check service health
-./scripts/linux/logs.sh health
+sudo ./scripts/linux/logs.sh health
 
 # View logs
-./scripts/linux/logs.sh dev
+sudo ./scripts/linux/logs.sh dev
 
 # Stop services
-./scripts/linux/stop.sh
+sudo ./scripts/linux/stop.sh
 ```
 
 #### **Security Best Practices**
@@ -700,10 +702,10 @@ cd gearfalcon-app
 - ✅ **Monitor for accidental commits** of sensitive data
 
 #### **Team Communication**
-- 📢 **New team members**: Must run `.\scripts\windows\generate-secrets.bat` (Windows) or `./scripts/linux/generate-secrets.sh` (Linux) before starting
+- 📢 **New team members**: Must run `.\scripts\windows\generate-secrets.bat` (Windows) or `sudo ./scripts/linux/generate-secrets.sh` (Linux) before starting
 - 🔒 **Security incidents**: Immediately regenerate all secrets if compromised
 - 📝 **Documentation**: All team members should read this Docker guide
-- 🛠️ **Issues**: Use `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux) for quick diagnostics
+- 🛠️ **Issues**: Use `.\scripts\windows\logs.bat health` (Windows) or `sudo ./scripts/linux/logs.sh health` (Linux) for quick diagnostics
 
 ### 🔄 Environment Switching
 
@@ -723,14 +725,14 @@ cd gearfalcon-app
 
 ##### Linux/Ubuntu
 ```bash
-# Stop production
-./scripts/linux/stop.sh
+# Stop development
+sudo ./scripts/linux/stop.sh
 
 # Generate production secrets (in CI/CD)
 # Update docker-compose.prod.yml if needed
 
 # Start production
-./scripts/linux/start-prod.sh
+sudo ./scripts/linux/start-prod.sh
 ```
 
 #### **Production to Development**
@@ -750,11 +752,11 @@ if not exist "secrets" .\scripts\windows\generate-secrets.bat
 ##### Linux/Ubuntu
 ```bash
 # Stop production
-./scripts/linux/stop.sh
+sudo ./scripts/linux/stop.sh
 
 # Verify development secrets exist
-[ ! -d "secrets" ] && ./scripts/linux/generate-secrets.sh
+[ ! -d "secrets" ] && sudo ./scripts/linux/generate-secrets.sh
 
 # Start development
-./scripts/linux/start-dev.sh
+sudo ./scripts/linux/start-dev.sh
 ```

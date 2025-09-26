@@ -3,6 +3,24 @@
 # GearFalcon Logs and Monitoring Script
 # =====================================
 
+# Navigate to project root directory (parent of scripts directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPTS_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SCRIPTS_DIR")"
+cd "$PROJECT_ROOT"
+
+# Check if docker-compose is available (try v2 first, then v1)
+COMPOSE_CMD=""
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif docker-compose --version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    echo "❌ Docker Compose is not available!"
+    echo "Please ensure Docker Compose is installed."
+    exit 1
+fi
+
 if [ "$1" == "dev" ]; then
     echo "📋 GearFalcon Development Logs"
     echo "=============================="
@@ -18,12 +36,12 @@ if [ "$1" == "dev" ]; then
         echo "Showing all development logs..."
         echo "Press Ctrl+C to stop following logs"
         echo ""
-        docker-compose logs -f
+        $COMPOSE_CMD logs -f
     else
         echo "Showing logs for service: $2"
         echo "Press Ctrl+C to stop following logs"
         echo ""
-        docker-compose logs -f "$2"
+        $COMPOSE_CMD logs -f "$2"
     fi
 elif [ "$1" == "prod" ]; then
     echo "📋 GearFalcon Production Logs"
@@ -40,22 +58,22 @@ elif [ "$1" == "prod" ]; then
         echo "Showing all production logs..."
         echo "Press Ctrl+C to stop following logs"
         echo ""
-        docker-compose -f docker-compose.prod.yml logs -f
+        $COMPOSE_CMD -f docker-compose.prod.yml logs -f
     else
         echo "Showing logs for service: $2"
         echo "Press Ctrl+C to stop following logs"
         echo ""
-        docker-compose -f docker-compose.prod.yml logs -f "$2"
+        $COMPOSE_CMD -f docker-compose.prod.yml logs -f "$2"
     fi
 elif [ "$1" == "status" ]; then
     echo "📊 GearFalcon Service Status"
     echo "============================"
     echo ""
     echo "Development Environment:"
-    docker-compose ps
+    $COMPOSE_CMD ps
     echo ""
     echo "Production Environment:"
-    docker-compose -f docker-compose.prod.yml ps
+    $COMPOSE_CMD -f docker-compose.prod.yml ps
     echo ""
     echo "Resource Usage:"
     docker stats --no-stream
@@ -96,8 +114,8 @@ elif [ "$1" == "cleanup" ]; then
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo ""
         echo "Stopping all services first..."
-        docker-compose down --timeout 30 2>/dev/null
-        docker-compose -f docker-compose.prod.yml down --timeout 30 2>/dev/null
+        $COMPOSE_CMD down --timeout 30 2>/dev/null
+        $COMPOSE_CMD -f docker-compose.prod.yml down --timeout 30 2>/dev/null
 
         echo ""
         echo "Cleaning up Docker resources..."
