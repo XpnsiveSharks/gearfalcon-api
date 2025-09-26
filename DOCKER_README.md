@@ -4,19 +4,36 @@ This guide explains how to use the improved Docker Compose configuration with se
 
 ## 🚀 Quick Start
 
-### Using Batch Scripts (Recommended)
+### Using Scripts (Recommended)
+
+#### Windows
 ```bash
 # Development Environment
-double-click start-dev.bat
+.\scripts\windows\start-dev.bat
 
 # Production Environment
-double-click start-prod.bat
+.\scripts\windows\start-prod.bat
 
 # Stop all services
-double-click stop.bat
+.\scripts\windows\stop.bat
 
 # View logs and monitor
-double-click logs.bat
+.\scripts\windows\logs.bat
+```
+
+#### Linux/Ubuntu
+```bash
+# Development Environment
+./scripts/linux/start-dev.sh
+
+# Production Environment
+./scripts/linux/start-prod.sh
+
+# Stop all services
+./scripts/linux/stop.sh
+
+# View logs and monitor
+./scripts/linux/logs.sh
 ```
 
 ### Using Docker Commands (Advanced)
@@ -34,34 +51,38 @@ docker-compose -f docker-compose.prod.yml down
 
 ## 🛠️ Management Scripts
 
-The project includes comprehensive batch scripts for easy Docker management:
+The project includes comprehensive scripts for easy Docker management on both Windows and Linux:
 
-### **start-dev.bat** - Development Environment
+### **start-dev** - Development Environment
 - ✅ **Progress Tracking**: 5-step startup with validation
 - ✅ **Error Handling**: Validates Docker installation and environment
 - ✅ **Service Verification**: Confirms services start successfully
 - ✅ **User Guidance**: Comprehensive help and monitoring commands
 - ✅ **Health Checks**: Verifies service endpoints after startup
+- 📁 **Location**: `scripts/windows/start-dev.bat` (Windows) / `scripts/linux/start-dev.sh` (Linux)
 
-### **start-prod.bat** - Production Environment
+### **start-prod** - Production Environment
 - ✅ **Security Validation**: Verifies secrets directory and files exist
 - ✅ **Environment Checks**: Validates production configuration
 - ✅ **Health Verification**: Tests service endpoints after startup
 - ✅ **Production Monitoring**: Comprehensive status reporting
 - ✅ **Error Prevention**: Prevents startup with missing configuration
+- 📁 **Location**: `scripts/windows/start-prod.bat` (Windows) / `scripts/linux/start-prod.sh` (Linux)
 
-### **stop.bat** - Service Shutdown
+### **stop** - Service Shutdown
 - ✅ **Graceful Shutdown**: 30-second timeout with proper cleanup
 - ✅ **Orphaned Container Cleanup**: Removes leftover containers and networks
 - ✅ **System Status**: Shows Docker disk usage and resource information
 - ✅ **Maintenance Commands**: Provides cleanup and troubleshooting guidance
+- 📁 **Location**: `scripts/windows/stop.bat` (Windows) / `scripts/linux/stop.sh` (Linux)
 
-### **logs.bat** - Monitoring and Logs
+### **logs** - Monitoring and Logs
 - ✅ **Multi-Environment Support**: Separate commands for dev/prod logs
 - ✅ **Service-Specific Logs**: Target individual services
 - ✅ **Health Monitoring**: Built-in health check functionality
 - ✅ **System Cleanup**: Safe Docker resource cleanup utilities
 - ✅ **Status Reporting**: Comprehensive service status display
+- 📁 **Location**: `scripts/windows/logs.bat` (Windows) / `scripts/linux/logs.sh` (Linux)
 
 ##  Security Features
 
@@ -186,19 +207,36 @@ export MYSQL_USER="your-db-user"
 
 ## 🛠️ Troubleshooting
 
-### Using Batch Scripts (Recommended)
+### Using Scripts (Recommended)
+
+#### Windows
 ```bash
 # Quick service status and health check
-logs.bat status
+.\scripts\windows\logs.bat status
 
 # View all logs with auto-follow
-logs.bat dev
+.\scripts\windows\logs.bat dev
 
 # Check service health
-logs.bat health
+.\scripts\windows\logs.bat health
 
 # Clean up Docker resources
-logs.bat cleanup
+.\scripts\windows\logs.bat cleanup
+```
+
+#### Linux/Ubuntu
+```bash
+# Quick service status and health check
+./scripts/linux/logs.sh status
+
+# View all logs with auto-follow
+./scripts/linux/logs.sh dev
+
+# Check service health
+./scripts/linux/logs.sh health
+
+# Clean up Docker resources
+./scripts/linux/logs.sh cleanup
 ```
 
 ### Using Docker Commands (Advanced)
@@ -287,72 +325,120 @@ To update secrets:
   - [ ] `secrets/db_root_password.txt`
   - [ ] `secrets/db_password.txt`
   - [ ] `secrets/db_database.txt`
-- [ ] Test development environment: `start-dev.bat`
-- [ ] Verify health checks work: `logs.bat health`
+- [ ] Test development environment: `.\scripts\windows\start-dev.bat` (Windows) or `./scripts/linux/start-dev.sh` (Linux)
+- [ ] Verify health checks work: `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux)
 - [ ] Check resource limits are appropriate for your infrastructure
 
 ### **Production Deployment**
-- [ ] Use production startup script: `start-prod.bat`
+- [ ] Use production startup script: `.\scripts\windows\start-prod.bat` (Windows) or `./scripts/linux/start-prod.sh` (Linux)
 - [ ] Verify all services start successfully
 - [ ] Test health endpoints:
   - [ ] Frontend: `http://localhost:3000/api/health`
   - [ ] Backend: `http://localhost:8080/health`
-- [ ] Monitor logs: `logs.bat prod`
-- [ ] Check service status: `logs.bat status`
+- [ ] Monitor logs: `.\scripts\windows\logs.bat prod` (Windows) or `./scripts/linux/logs.sh prod` (Linux)
+- [ ] Check service status: `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux)
 
 ### **Post-Deployment**
-- [ ] Verify logging configuration with `logs.bat prod`
+- [ ] Verify logging configuration with `.\scripts\windows\logs.bat prod` (Windows) or `./scripts/linux/logs.sh prod` (Linux)
 - [ ] Test backup and recovery procedures
 - [ ] Monitor resource usage: `docker stats`
 - [ ] Set up log rotation monitoring
 - [ ] Document any environment-specific configurations
 
 ### **Maintenance**
-- [ ] Regular health checks: `logs.bat health`
-- [ ] Monitor resource usage: `logs.bat status`
-- [ ] Clean up resources periodically: `logs.bat cleanup`
+- [ ] Regular health checks: `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux)
+- [ ] Monitor resource usage: `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux)
+- [ ] Clean up resources periodically: `.\scripts\windows\logs.bat cleanup` (Windows) or `./scripts/linux/logs.sh cleanup` (Linux)
 - [ ] Update secrets rotation schedule
 - [ ] Review and update resource limits as needed
 
 ## 📋 Script Usage Examples
 
 ### **Development Workflow**
+
+#### Windows
 ```bash
 # Start development environment
-start-dev.bat
+.\scripts\windows\start-dev.bat
 
 # Monitor logs during development
-logs.bat dev
+.\scripts\windows\logs.bat dev
 
 # Check service health
-logs.bat health
+.\scripts\windows\logs.bat health
 
 # Stop all services
-stop.bat
+.\scripts\windows\stop.bat
+```
+
+#### Linux/Ubuntu
+```bash
+# Start development environment
+./scripts/linux/start-dev.sh
+
+# Monitor logs during development
+./scripts/linux/logs.sh dev
+
+# Check service health
+./scripts/linux/logs.sh health
+
+# Stop all services
+./scripts/linux/stop.sh
 ```
 
 ### **Production Workflow**
+
+#### Windows
 ```bash
 # Start production environment
-start-prod.bat
+.\scripts\windows\start-prod.bat
 
 # Monitor production logs
-logs.bat prod
+.\scripts\windows\logs.bat prod
 
 # Check system status
-logs.bat status
+.\scripts\windows\logs.bat status
 
 # Graceful shutdown
-stop.bat
+.\scripts\windows\stop.bat
+```
+
+#### Linux/Ubuntu
+```bash
+# Start production environment
+./scripts/linux/start-prod.sh
+
+# Monitor production logs
+./scripts/linux/logs.sh prod
+
+# Check system status
+./scripts/linux/logs.sh status
+
+# Graceful shutdown
+./scripts/linux/stop.sh
 ```
 
 ### **Maintenance Tasks**
+
+#### Windows
 ```bash
 # Clean up Docker resources
-logs.bat cleanup
+.\scripts\windows\logs.bat cleanup
 
 # Check all service health
-logs.bat health
+.\scripts\windows\logs.bat health
+
+# View resource usage
+docker stats
+```
+
+#### Linux/Ubuntu
+```bash
+# Clean up Docker resources
+./scripts/linux/logs.sh cleanup
+
+# Check all service health
+./scripts/linux/logs.sh health
 
 # View resource usage
 docker stats

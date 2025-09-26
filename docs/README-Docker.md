@@ -4,38 +4,54 @@ This guide explains how to run both the Next.js frontend and PHP backend using D
 
 ## Project Structure
 
-- **Backend**: `C:\xampp\htdocs\Projects\gearfalcon-app` (PHP 8.3 with security hardening)
-- **Frontend**: `C:\xampp\htdocs\Projects\gearfalcon-frontend` (Next.js with App Router)
+- **Backend**: PHP 8.3 with security hardening
+- **Frontend**: Next.js with App Router
 - **Database**: MySQL 8.0 (containerized with secrets management)
+- **Scripts**: Organized in `scripts/` folder with OS-specific subfolders (`windows/` and `linux/`)
 
 ## Prerequisites
 
-- Docker Desktop (latest version)
-- Windows 10/11 with WSL2 (recommended)
+- Docker Desktop (latest version) or Docker Engine on Linux
+- Windows 10/11 with WSL2 (recommended) or Linux/Ubuntu
 
 ## 🚀 Quick Start
 
-### Using Batch Scripts (Recommended)
+### Using Scripts (Recommended)
 
+#### Windows
 ```bash
-# Double-click to start development mode with full validation
-start-dev.bat
+# Start development mode with full validation
+.\scripts\windows\start-dev.bat
 
-# Double-click to start production mode with security checks
-start-prod.bat
+# Start production mode with security checks
+.\scripts\windows\start-prod.bat
 
-# Double-click to stop all services with cleanup
-stop.bat
+# Stop all services with cleanup
+.\scripts\windows\stop.bat
 
-# Double-click to view logs and monitor services
-logs.bat
+# View logs and monitor services
+.\scripts\windows\logs.bat
+```
+
+#### Linux/Ubuntu
+```bash
+# Start development mode with full validation
+./scripts/linux/start-dev.sh
+
+# Start production mode with security checks
+./scripts/linux/start-prod.sh
+
+# Stop all services with cleanup
+./scripts/linux/stop.sh
+
+# View logs and monitor services
+./scripts/linux/logs.sh
 ```
 
 ### Using Docker Commands (Advanced)
 
 ```bash
 # Development Mode (with hot reload)
-cd C:\xampp\htdocs\Projects\gearfalcon-app
 docker-compose up --build
 
 # Production Mode
@@ -83,25 +99,31 @@ docker-compose -f docker-compose.prod.yml up --build -d
 ## File Structure
 
 ```
-Projects/
-├── gearfalcon-app/ (Backend)
-│   ├── docker-compose.yml          # Main docker-compose file
-│   ├── docker-compose.override.yml # Development overrides
-│   ├── docker-compose.prod.yml     # Production configuration
-│   ├── Dockerfile                  # Backend Dockerfile
-│   ├── .dockerignore              # Backend ignore file
-│   ├── .env.development          # Development environment
-│   ├── .env.production           # Production environment
-│   ├── start-dev.bat             # Development startup script
-│   ├── start-prod.bat            # Production startup script
-│   ├── stop.bat                  # Stop all services script
-│   └── README-Docker.md          # Complete documentation
-│
-└── gearfalcon-frontend/ (Frontend)
-    ├── Dockerfile                 # Production Dockerfile
-    ├── Dockerfile.dev            # Development Dockerfile
-    ├── .dockerignore            # Frontend ignore file
-    └── .env.local               # Frontend environment
+gearfalcon-app/
+├── docker-compose.yml          # Main docker-compose file
+├── docker-compose.override.yml # Development overrides
+├── docker-compose.prod.yml     # Production configuration
+├── Dockerfile                  # Backend Dockerfile
+├── .dockerignore              # Backend ignore file
+├── .env.development          # Development environment
+├── .env.production           # Production environment
+├── scripts/                   # OS-specific scripts
+│   ├── windows/               # Windows batch scripts
+│   │   ├── generate-secrets.bat
+│   │   ├── logs.bat
+│   │   ├── start-dev.bat
+│   │   ├── start-prod.bat
+│   │   └── stop.bat
+│   └── linux/                 # Linux shell scripts
+│       ├── generate-secrets.sh
+│       ├── logs.sh
+│       ├── start-dev.sh
+│       ├── start-prod.sh
+│       └── stop.sh
+├── docs/                      # Documentation
+│   ├── README-Docker.md       # Complete documentation
+│   └── ...
+└── README.md                  # Main project README
 ```
 
 ## Development Workflow
@@ -171,42 +193,75 @@ docker-compose up --build -d
 
 ## Troubleshooting
 
-### Using Batch Scripts (Recommended)
+### Using Scripts (Recommended)
 
+#### Windows
 ```bash
 # Quick service status and health check
-logs.bat status
+.\scripts\windows\logs.bat status
 
 # View all logs with auto-follow
-logs.bat dev
+.\scripts\windows\logs.bat dev
 
 # Check service health
-logs.bat health
+.\scripts\windows\logs.bat health
 
 # Clean up Docker resources
-logs.bat cleanup
+.\scripts\windows\logs.bat cleanup
+```
+
+#### Linux/Ubuntu
+```bash
+# Quick service status and health check
+./scripts/linux/logs.sh status
+
+# View all logs with auto-follow
+./scripts/linux/logs.sh dev
+
+# Check service health
+./scripts/linux/logs.sh health
+
+# Clean up Docker resources
+./scripts/linux/logs.sh cleanup
 ```
 
 ### Common Issues
 
 1. **Port already in use**: Change ports in docker-compose.yml or stop conflicting services
-2. **Permission issues**: Make sure Docker Desktop has proper permissions
+2. **Permission issues**: Make sure Docker has proper permissions (Windows: Docker Desktop, Linux: user in docker group)
 3. **Path not found**: Ensure the frontend path in docker-compose.yml is correct
 4. **Secrets missing**: Production startup will fail if secrets/ directory is missing
-5. **Health check failures**: Services may take time to start - check logs with `logs.bat`
+5. **Health check failures**: Services may take time to start - check logs with `.\scripts\windows\logs.bat` (Windows) or `./scripts/linux/logs.sh` (Linux)
 
 ### 🔐 Secrets-Related Issues
 
 #### **Issue: "Secrets directory not found"**
+
+##### Windows
 ```bash
 # Solution: Generate secrets first
-.\generate-secrets.bat
+.\scripts\windows\generate-secrets.bat
+```
+
+##### Linux/Ubuntu
+```bash
+# Solution: Generate secrets first
+./scripts/linux/generate-secrets.sh
 ```
 
 #### **Issue: "Permission denied" on secrets files**
+
+##### Windows
 ```bash
 # Solution: Set proper permissions
 icacls secrets\* /inheritance:r /grant:r "%username%:F"
+icacls secrets\* /remove "Users" "Everyone" "Authenticated Users"
+```
+
+##### Linux/Ubuntu
+```bash
+# Solution: Set proper permissions
+chmod 600 secrets/*
 ```
 
 #### **Issue: Secrets committed to git (SECURITY RISK!)**
@@ -217,26 +272,50 @@ git commit -m "Remove secrets from repository"
 git push --force-with-lease
 
 # Generate new secrets
-.\generate-secrets.bat
+# Windows: .\scripts\windows\generate-secrets.bat
+# Linux: ./scripts/linux/generate-secrets.sh
 ```
 
 #### **Issue: Database connection errors**
+
+##### Windows
 ```bash
 # Solution: Check secrets format
 type secrets\db_password.txt
 # Should contain only the password, no extra characters
 
 # Regenerate if needed
-.\generate-secrets.bat
+.\scripts\windows\generate-secrets.bat
+```
+
+##### Linux/Ubuntu
+```bash
+# Solution: Check secrets format
+cat secrets/db_password.txt
+# Should contain only the password, no extra characters
+
+# Regenerate if needed
+./scripts/linux/generate-secrets.sh
 ```
 
 #### **Issue: Team member can't start services**
+
+##### Windows
 ```bash
 # Solution: Each team member needs their own secrets
-.\generate-secrets.bat
+.\scripts\windows\generate-secrets.bat
 
 # Verify setup
-.\logs.bat health
+.\scripts\windows\logs.bat health
+```
+
+##### Linux/Ubuntu
+```bash
+# Solution: Each team member needs their own secrets
+./scripts/linux/generate-secrets.sh
+
+# Verify setup
+./scripts/linux/logs.sh health
 ```
 
 ### Docker Commands
@@ -280,14 +359,27 @@ For production deployment:
 
 Each team member must generate their own unique secrets for local development:
 
+#### Windows
 ```bash
 # Option 1: Use the automated script (recommended)
-.\generate-secrets.bat
+.\scripts\windows\generate-secrets.bat
 
 # Option 2: Generate manually
 powershell -Command "[Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_password.txt -Encoding UTF8"
 powershell -Command "[Convert]::ToBase64String([System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)) | Out-File -FilePath secrets/db_root_password.txt -Encoding UTF8"
 echo "gearfalcon_db_dev" > secrets/db_database.txt
+```
+
+#### Linux/Ubuntu
+```bash
+# Option 1: Use the automated script (recommended)
+./scripts/linux/generate-secrets.sh
+
+# Option 2: Generate manually
+openssl rand -base64 32 > secrets/db_password.txt
+openssl rand -base64 32 > secrets/db_root_password.txt
+echo "gearfalcon_db_dev" > secrets/db_database.txt
+chmod 600 secrets/*
 ```
 
 #### **Step 2: Set Proper File Permissions**
@@ -300,19 +392,29 @@ icacls secrets\* /remove "Users" "Everyone" "Authenticated Users"
 
 #### **Step 3: Verify Secrets Setup**
 
+##### Windows
 ```bash
 # Check that secrets are properly configured
-.\logs.bat health
+.\scripts\windows\logs.bat health
 
 # Or manually verify
 curl http://localhost:8080/health
 curl http://localhost:3000/api/health
 ```
 
-### 🔧 Secrets Generation Script
+##### Linux/Ubuntu
+```bash
+# Check that secrets are properly configured
+./scripts/linux/logs.sh health
 
-Create a `generate-secrets.bat` script in your project root:
+# Or manually verify
+curl http://localhost:8080/health
+curl http://localhost:3000/api/health
+```
 
+### 🔧 Secrets Generation Scripts
+
+#### Windows (generate-secrets.bat)
 ```batch
 @echo off
 echo 🔐 Generating Docker Secrets...
@@ -342,9 +444,44 @@ echo 📍 Location: ./secrets/
 echo 🔒 Files are secured with owner-only permissions
 echo.
 echo 🚀 You can now start the development environment:
-echo    .\start-dev.bat
+echo    .\scripts\windows\start-dev.bat
 echo.
 pause
+```
+
+#### Linux/Ubuntu (generate-secrets.sh)
+```bash
+#!/bin/bash
+
+echo "🔐 Generating Docker Secrets..."
+echo "==============================="
+
+# Check if secrets directory exists
+if [ ! -d "secrets" ]; then
+    echo "📁 Creating secrets directory..."
+    mkdir -p secrets
+fi
+
+echo "🔑 Generating database password..."
+openssl rand -base64 32 > secrets/db_password.txt
+
+echo "🔑 Generating root password..."
+openssl rand -base64 32 > secrets/db_root_password.txt
+
+echo "📝 Setting database name..."
+echo "gearfalcon_db_dev" > secrets/db_database.txt
+
+echo "🔒 Setting file permissions..."
+chmod 600 secrets/*
+
+echo "✅ Secrets generated successfully!"
+echo "📍 Location: ./secrets/"
+echo "🔒 Files are secured with owner-only permissions"
+echo ""
+echo "🚀 You can now start the development environment:"
+echo "    ./scripts/linux/start-dev.sh"
+echo ""
+read -p "Press Enter to continue..."
 ```
 
 ### 🔒 Security Best Practices for Teams
@@ -365,6 +502,7 @@ pause
 
 #### **🔍 Verify Security Setup**
 
+##### Windows
 ```bash
 # Check .gitignore includes secrets
 findstr /C:"secrets/" .gitignore
@@ -374,6 +512,18 @@ git status --porcelain | findstr secrets
 
 # Check file permissions
 dir secrets\ /Q
+```
+
+##### Linux/Ubuntu
+```bash
+# Check .gitignore includes secrets
+grep "secrets/" .gitignore
+
+# Verify secrets are not tracked by git
+git status --porcelain | grep secrets
+
+# Check file permissions
+ls -la secrets/
 ```
 
 ## Security Notes
@@ -403,7 +553,7 @@ dir secrets\ /Q
 - **Volume optimization**: Read-only mounts where appropriate
 
 ### Additional Recommendations
-- Monitor resource usage with `logs.bat status`
+- Monitor resource usage with `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux)
 - Scale resource limits based on actual usage patterns
 - Consider using Docker build cache mounts for faster builds
 - Use production-optimized base images (already implemented)
@@ -414,13 +564,14 @@ dir secrets\ /Q
 
 If you encounter issues:
 
-1. **Quick diagnostics**: Use `logs.bat status` to check service health
-2. **View logs**: Use `logs.bat dev` or `logs.bat prod` for comprehensive logging
-3. **Check health**: Use `logs.bat health` to verify all services are responding
-4. **Clean restart**: Use `stop.bat` then `start-dev.bat` for a clean restart
+1. **Quick diagnostics**: Use `.\scripts\windows\logs.bat status` (Windows) or `./scripts/linux/logs.sh status` (Linux) to check service health
+2. **View logs**: Use `.\scripts\windows\logs.bat dev` (Windows) or `./scripts/linux/logs.sh dev` (Linux) for development logs, or `prod` for production logs
+3. **Check health**: Use `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux) to verify all services are responding
+4. **Clean restart**: Use `.\scripts\windows\stop.bat` then `.\scripts\windows\start-dev.bat` (Windows) or `./scripts/linux/stop.sh` then `./scripts/linux/start-dev.sh` (Linux) for a clean restart
 
 ### 📋 Advanced Troubleshooting
 
+##### Windows
 ```bash
 # Check Docker system resources
 docker system df
@@ -439,47 +590,106 @@ docker version
 docker network ls
 ```
 
+##### Linux/Ubuntu
+```bash
+# Check Docker system resources
+docker system df
+
+# Monitor real-time resource usage
+docker stats
+
+# Check for port conflicts
+netstat -tlnp | grep :3000
+netstat -tlnp | grep :8080
+
+# Or using ss
+ss -tlnp | grep :3000
+ss -tlnp | grep :8080
+
+# Verify Docker is running
+docker version
+
+# Check container networks
+docker network ls
+```
+
 ### 📞 Support Resources
 
 - **Documentation**: See `DOCKER_README.md` for comprehensive setup guide
 - **Architecture**: See `ARCHITECTURE.md` for system design details
 - **API Guide**: See `API/README.md` for endpoint documentation
-- **Logs Script**: Use `logs.bat` for advanced monitoring and diagnostics
+- **Scripts**: Use `scripts/windows/` (Windows) or `scripts/linux/` (Linux) for management scripts
 
 ## 🤝 Team Development Workflow
 
 ### 🔐 Secrets Management for Teams
 
 #### **Initial Setup (One-Time per Developer)**
+
+##### Windows
 ```bash
 # 1. Clone the repository
 git clone <repository-url>
 cd gearfalcon-app
 
 # 2. Generate your own secrets
-.\generate-secrets.bat
+.\scripts\windows\generate-secrets.bat
 
 # 3. Start development environment
-.\start-dev.bat
+.\scripts\windows\start-dev.bat
+```
+
+##### Linux/Ubuntu
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd gearfalcon-app
+
+# 2. Generate your own secrets
+./scripts/linux/generate-secrets.sh
+
+# 3. Start development environment
+./scripts/linux/start-dev.sh
 ```
 
 #### **Daily Development Workflow**
+
+##### Windows
 ```bash
 # Start services
-.\start-dev.bat
+.\scripts\windows\start-dev.bat
 
 # Make your changes
 # Frontend: Changes auto-reload at http://localhost:3000
 # Backend: Restart container for PHP changes
 
 # Check service health
-.\logs.bat health
+.\scripts\windows\logs.bat health
 
 # View logs
-.\logs.bat dev
+.\scripts\windows\logs.bat dev
 
 # Stop services
-.\stop.bat
+.\scripts\windows\stop.bat
+```
+
+##### Linux/Ubuntu
+```bash
+# Start services
+./scripts/linux/start-dev.sh
+
+# Make your changes
+# Frontend: Changes auto-reload at http://localhost:3000
+# Backend: Restart container for PHP changes
+
+# Check service health
+./scripts/linux/logs.sh health
+
+# View logs
+./scripts/linux/logs.sh dev
+
+# Stop services
+./scripts/linux/stop.sh
 ```
 
 #### **Security Best Practices**
@@ -490,33 +700,61 @@ cd gearfalcon-app
 - ✅ **Monitor for accidental commits** of sensitive data
 
 #### **Team Communication**
-- 📢 **New team members**: Must run `.\generate-secrets.bat` before starting
+- 📢 **New team members**: Must run `.\scripts\windows\generate-secrets.bat` (Windows) or `./scripts/linux/generate-secrets.sh` (Linux) before starting
 - 🔒 **Security incidents**: Immediately regenerate all secrets if compromised
 - 📝 **Documentation**: All team members should read this Docker guide
-- 🛠️ **Issues**: Use `.\logs.bat health` for quick diagnostics
+- 🛠️ **Issues**: Use `.\scripts\windows\logs.bat health` (Windows) or `./scripts/linux/logs.sh health` (Linux) for quick diagnostics
 
 ### 🔄 Environment Switching
 
 #### **Development to Production**
+
+##### Windows
 ```bash
 # Stop development
-.\stop.bat
+.\scripts\windows\stop.bat
 
 # Generate production secrets (in CI/CD)
 # Update docker-compose.prod.yml if needed
 
 # Start production
-.\start-prod.bat
+.\scripts\windows\start-prod.bat
+```
+
+##### Linux/Ubuntu
+```bash
+# Stop production
+./scripts/linux/stop.sh
+
+# Generate production secrets (in CI/CD)
+# Update docker-compose.prod.yml if needed
+
+# Start production
+./scripts/linux/start-prod.sh
 ```
 
 #### **Production to Development**
+
+##### Windows
 ```bash
 # Stop production
-.\stop.bat
+.\scripts\windows\stop.bat
 
 # Verify development secrets exist
-if not exist "secrets" .\generate-secrets.bat
+if not exist "secrets" .\scripts\windows\generate-secrets.bat
 
 # Start development
-.\start-dev.bat
+.\scripts\windows\start-dev.bat
+```
+
+##### Linux/Ubuntu
+```bash
+# Stop production
+./scripts/linux/stop.sh
+
+# Verify development secrets exist
+[ ! -d "secrets" ] && ./scripts/linux/generate-secrets.sh
+
+# Start development
+./scripts/linux/start-dev.sh
 ```
