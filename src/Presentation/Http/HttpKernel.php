@@ -85,8 +85,8 @@ class HttpKernel
                 [$class, $method] = $handler;
                 $controller = $this->container[$class] ?? new $class(); // Instantiate the controller (from DI container if available, otherwise new).
 
-                // For POST requests, also parse JSON body:
-                if ($httpMethod === 'POST') {
+                // For POST, PUT, PATCH requests, also parse JSON body:
+                if (in_array($httpMethod, ['POST', 'PUT', 'PATCH'])) {
                     $input = json_decode(file_get_contents('php://input'), true) ?? [];
                     $vars = array_merge($vars, [$input]);
                 }

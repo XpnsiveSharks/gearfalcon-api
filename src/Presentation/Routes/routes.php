@@ -3,6 +3,7 @@ use App\Presentation\Controllers\AuthController;
 use App\Presentation\Controllers\Customer\QuoteController;
 use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Admin\AdminController;
+use App\Presentation\Controllers\CatalogController;
 use FastRoute\RouteCollector;
 
 return function(RouteCollector $r) {
@@ -41,6 +42,11 @@ return function(RouteCollector $r) {
 
     // Customer quotes
     $r->addRoute('GET', '/customers/{id:\d+}/quotes', [QuoteController::class, 'getByCustomer']);
+
+    // Public catalog routes
+    $r->addGroup('/catalog', function (RouteCollector $r) {
+        $r->addRoute('GET', '/categories', [CatalogController::class, 'getCategories']);
+    });
 
     // Admin routes
     $r->addGroup('/admin', function (RouteCollector $r) {
