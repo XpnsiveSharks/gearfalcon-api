@@ -48,9 +48,15 @@ class ServiceCategoryService
      */
     public function deleteCategory($id)
     {
-        return $this->serviceCategoryRepository->update($id, [
-            'deleted_at' => Carbon::now(),
-        ]);
+        $category = $this->serviceCategoryRepository->findById($id);
+        if (!$category) {
+            return null;
+        }
+
+        $category->deleted_at = Carbon::now();
+        $category->save();
+
+        return $category->fresh();
     }
 
     /**
@@ -62,4 +68,5 @@ class ServiceCategoryService
     {
         return $this->serviceCategoryRepository->findWhereNull('deleted_at')->toArray();
     }
+
 }

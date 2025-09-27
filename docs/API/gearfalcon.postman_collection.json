@@ -238,21 +238,6 @@
       "response": []
     },
     {
-      "name": "GET List Categories",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8080/admin/categories",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "8080",
-          "path": ["admin", "categories"]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "POST Create Category",
       "request": {
         "method": "POST",
@@ -306,6 +291,22 @@
           "port": "8080",
           "path": ["admin", "categories", "1"]
         }
+      },
+      "response": []
+    },
+    {
+      "name": "GET Public Categories",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/catalog/categories",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["catalog", "categories"]
+        },
+        "description": "Get all service categories (public endpoint - no authentication required)"
       },
       "response": []
     }

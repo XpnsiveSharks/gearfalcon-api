@@ -39,10 +39,13 @@ class AdminController
     {
         $deleted = $this->serviceCategoryService->deleteCategory($id);
 
-        if (!$deleted) {
+        if ($deleted === null) {
             return json_encode(['message' => 'Category not found']);
         }
 
-        return json_encode(['message' => 'Category deleted successfully']);
+        return json_encode([
+            'message' => 'Category deleted successfully',
+            'deleted_at' => $deleted->deleted_at
+        ]);
     }
 }
