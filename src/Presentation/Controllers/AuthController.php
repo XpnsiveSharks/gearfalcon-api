@@ -6,6 +6,7 @@ use App\Application\Services\UserRegistrationService;
 use App\Application\Services\EmailVerificationService;
 use App\Application\Exceptions\InvalidCredentialsException;
 use App\Infrastructure\Models\User;
+use Firebase\JWT\JWT;
 
 class AuthController
 {
@@ -42,8 +43,26 @@ class AuthController
         try {
             $user = $this->authService->login($email, $password);
 
+            // Issue JWT token (verification/guarding is handled by middleware)
+            $issuedAt = time();
+            $expiresAt = $issuedAt + (int)($_ENV['JWT_TTL_SECONDS'] ?? 3600);
+            $payload = [
+                'sub' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'is_verified' => (bool)$user->is_verified,
+                'iat' => $issuedAt,
+                'exp' => $expiresAt,
+            ];
+
+            $secret = $_ENV['JWT_SECRET'] ?? '';
+            $token = JWT::encode($payload, $secret, 'HS256');
+
             return $this->jsonResponse([
                 'success' => true,
+                'token' => $token,
+                'expires_in' => $expiresAt - $issuedAt,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,

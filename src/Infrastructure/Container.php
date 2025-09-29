@@ -43,6 +43,7 @@ use App\Presentation\Controllers\CatalogController;
 
 // Middleware
 use App\Presentation\Middleware\CorsMiddleware;
+use App\Presentation\Http\Middleware\AuthMiddleware;
 
 // Load .env with error handling
 try {
@@ -99,6 +100,8 @@ $serviceCatalogService = new ServiceCatalogService($serviceRepository, $serviceC
 
 // Middleware
 $corsMiddleware = new CorsMiddleware();
+// Auth middleware with JWT secret
+$authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
  
 // Controllers
 $authController = new AuthController($authService, $userRegistrationService,  $emailVerificationService);
@@ -110,6 +113,7 @@ $catalogController = new CatalogController($serviceCatalogService);
 // DI Container
 $container = [
     CorsMiddleware::class => $corsMiddleware,
+    AuthMiddleware::class => $authMiddleware,
     AuthController::class => $authController,
     QuoteController::class => $quoteController,
     AdminController::class => $adminController,
