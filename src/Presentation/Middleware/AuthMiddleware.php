@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Presentation\Http\Middleware;
+namespace App\Presentation\Middleware;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
