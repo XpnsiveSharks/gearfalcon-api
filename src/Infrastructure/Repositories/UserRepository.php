@@ -51,6 +51,24 @@ class UserRepository extends Repository
     {
         return $this->model->where('role', $role)->get();
     }
+
+    /**
+     * Delete users that are not verified and whose verification window expired.
+     * A user is considered expired if:
+     *  - is_verified = false
+     *  - verification_code_expires_at IS NOT NULL AND < NOW() - intervalMinutes
+     */
+    public function deleteExpiredUnverifiedUsers(int $intervalMinutes = 5): int
+    {
+        $threshold = date('Y-m-d H:i:s', strtotime("-{$intervalMinutes} minutes"));
+
+        // Use query builder to perform a single delete
+        return $this->model
+            ->where('is_verified', false)
+            ->whereNotNull('verification_code_expires_at')
+            ->where('verification_code_expires_at', '<', $threshold)
+            ->delete();
+    }
 }
 
 

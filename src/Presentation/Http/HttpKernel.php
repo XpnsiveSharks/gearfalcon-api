@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Presentation\Http;
 
-use App\Presentation\Http\Middleware\AuthMiddleware;
+use App\Presentation\Middleware\AuthMiddleware;
 use FastRoute\Dispatcher;
 use App\Presentation\Middleware\CorsMiddleware;
 
