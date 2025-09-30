@@ -44,7 +44,8 @@ class UserRegistrationService
             'phone' => $data['phone'] ?? null,
             'is_verified' => false,
             'verification_code' => $verificationCode,
-            'verification_code_expires_at' => date('Y-m-d H:i:s', strtotime('+15 minutes'))
+            // Require verification within 5 minutes
+            'verification_code_expires_at' => date('Y-m-d H:i:s', strtotime('+5 minutes'))
         ]);
 
         return $user;

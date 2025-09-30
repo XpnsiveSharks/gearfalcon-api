@@ -43,7 +43,7 @@ use App\Presentation\Controllers\CatalogController;
 
 // Middleware
 use App\Presentation\Middleware\CorsMiddleware;
-use App\Presentation\Http\Middleware\AuthMiddleware;
+use App\Presentation\Middleware\AuthMiddleware;
 
 // Load .env with error handling
 try {
@@ -87,6 +87,17 @@ $jobRepository = new JobRepository(new Job);
 $technicianRepository = new TechnicianRepository(new Technician);
 $serviceCategoryRepository = new ServiceCategoryRepository(new ServiceCategory);
 $serviceRepository = new ServiceRepository(new Service);
+
+// Housekeeping: delete unverified users whose verification expired (>5 minutes)
+try {
+    $deletedCount = $userRepository->deleteExpiredUnverifiedUsers(5);
+    if ($deletedCount > 0) {
+        error_log("Cleanup: deleted {$deletedCount} expired unverified user(s)");
+    }
+} catch (\Throwable $e) {
+    // Do not block app if cleanup fails
+    error_log('Cleanup error (deleteExpiredUnverifiedUsers): ' . $e->getMessage());
+}
 
 // Services
 $userRegistrationService = new UserRegistrationService($userRepository);
