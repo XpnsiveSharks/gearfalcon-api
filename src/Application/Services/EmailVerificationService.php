@@ -29,7 +29,8 @@ class EmailVerificationService
         
         $this->userRepository->update($user->id, [
             'verification_code' => $code,
-            'verification_code_expires_at' => date('Y-m-d H:i:s', strtotime('+15 minutes'))
+            // Set expiry to 5 minutes to align with auto-cleanup
+            'verification_code_expires_at' => date('Y-m-d H:i:s', strtotime('+5 minutes'))
         ]);
 
         $this->sendVerificationEmail($email, (string)$code);
