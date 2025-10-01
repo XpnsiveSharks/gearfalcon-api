@@ -40,38 +40,52 @@ class AuthController
             return $this->jsonResponse(['error' => 'Email and password are required'], 422);
         }
 
-        try {
-            $user = $this->authService->login($email, $password);
+		try {
+			$user = $this->authService->login($email, $password);
 
-            // Issue JWT token (verification/guarding is handled by middleware)
-            $issuedAt = time();
-            $expiresAt = $issuedAt + (int)($_ENV['JWT_TTL_SECONDS'] ?? 3600);
-            $payload = [
-                'sub' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'is_verified' => (bool)$user->is_verified,
-                'iat' => $issuedAt,
-                'exp' => $expiresAt,
-            ];
+			// If user is not verified, resend code and block token issuance
+			if (!(bool)$user->is_verified) {
+				try {
+					$this->verificationService->resendVerificationCode($user->email);
+				} catch (\Exception $e) {
+					// Log but still return a helpful message
+					error_log('Failed to resend verification code: ' . $e->getMessage());
+				}
 
-            $secret = $_ENV['JWT_SECRET'] ?? '';
-            $token = JWT::encode($payload, $secret, 'HS256');
+				return $this->jsonResponse([
+					'error' => 'Email not verified. A new verification code has been sent to your email.'
+				], 403);
+			}
 
-            return $this->jsonResponse([
-                'success' => true,
-                'token' => $token,
-                'expires_in' => $expiresAt - $issuedAt,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'is_verified' => $user->is_verified
-                ]
-            ]);
-        } catch (InvalidCredentialsException $e) {
+			// Issue JWT token (verification/guarding is handled by middleware)
+			$issuedAt = time();
+			$expiresAt = $issuedAt + (int)($_ENV['JWT_TTL_SECONDS'] ?? 3600);
+			$payload = [
+				'sub' => $user->id,
+				'name' => $user->name,
+				'email' => $user->email,
+				'role' => $user->role,
+				'is_verified' => (bool)$user->is_verified,
+				'iat' => $issuedAt,
+				'exp' => $expiresAt,
+			];
+
+			$secret = $_ENV['JWT_SECRET'] ?? '';
+			$token = JWT::encode($payload, $secret, 'HS256');
+
+			return $this->jsonResponse([
+				'success' => true,
+				'token' => $token,
+				'expires_in' => $expiresAt - $issuedAt,
+				'user' => [
+					'id' => $user->id,
+					'name' => $user->name,
+					'email' => $user->email,
+					'role' => $user->role,
+					'is_verified' => $user->is_verified
+				]
+			]);
+		} catch (InvalidCredentialsException $e) {
             return $this->jsonResponse(['error' => $e->getMessage()], 401);
         }
     }
