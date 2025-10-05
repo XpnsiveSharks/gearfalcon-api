@@ -1,78 +1,163 @@
-  services:
-    frontend:
-      build:
-        context: ../gearfalcon-frontend
-        dockerfile: Dockerfile.dev
-      ports:
-        - "3000:3000"
-      environment:
-        - NODE_ENV=development
-        - NEXT_PUBLIC_API_URL=http://backend:80
-        - NEXT_TELEMETRY_DISABLED=1
-      volumes:
-        - ../gearfalcon-frontend:/app
-        - /app/node_modules
-        - /app/.next
-      networks:
-        - app-network
-      depends_on:
-        - backend
+version: '3.8'
 
-    backend:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      ports:
-        - "8080:80"
-      environment:
-        # Application
-        - APP_ENV=development
-        - APP_DEBUG=true
+services:
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ../gearfalcon-frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../gearfalcon-frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - BACKEND_URL=http://backend:80 
+      - NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - gearfalcon-network
+    labels:
+      - "app=gearfalcon"
+      - "service=frontend"
+      - "environment=development"
 
-        # Database
-        - DB_HOST=db
-        - DB_PORT=3306
-        - DB_DATABASE=gearfalcon_db_dev
-        - DB_USERNAME=gearfalcon_user
-        - DB_PASSWORD=gearfalcon_pass
+  # PHP Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html/src:ro
+      - ./public:/var/www/html/public:ro
+      - ./debug:/var/www/html/debug:ro
+      - ./.env.development:/var/www/html/.env:ro
+    environment:
+      - APP_ENV=development
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=gearfalcon_db_dev
+      - DB_USERNAME=gearfalcon_user
+      - DB_PASSWORD=SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - gearfalcon-network
+    labels:
+      - "app=gearfalcon"
+      - "service=backend"
+      - "environment=development"
 
-        # JWT Configuration
-        - JWT_SECRET=your-super-secret-access-key-at-least-32-characters-long
-        - JWT_REFRESH_SECRET=your-super-secret-refresh-key-at-least-32-characters-long
-        - JWT_TTL_SECONDS=900
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: FjmsJMI5cU1HpdNROGkBYh8aErWDLZSV
+      MYSQL_DATABASE: gearfalcon_db_dev
+      MYSQL_USER: gearfalcon_user
+      MYSQL_PASSWORD: SF7V8oHYEw1zDgQ9TU2d6OrJnvxXa5qC
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./gearfalcon_db.sql:/docker-entrypoint-initdb.d/gearfalcon_db.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pFjmsJMI5cU1HpdNROGkBYh8aErWDLZSV"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - gearfalcon-network
+    labels:
+      - "app=gearfalcon"
+      - "service=database"
+      - "environment=development"
 
-        # Cookie Configuration for Docker
-        - COOKIE_DOMAIN=
+  # phpMyAdmin - Database UI on http://localhost:8081
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_ABSOLUTE_URI=http://localhost:8081/
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - gearfalcon-network
+    labels:
+      - "app=gearfalcon"
+      - "service=phpmyadmin"
+      - "environment=development"
 
-        # CORS Configuration
-        - ALLOWED_ORIGIN=http://localhost:3000,http://frontend:3000,https://web.postman.co
+networks:
+  gearfalcon-network:
+    driver: bridge
 
-      volumes:
-        - .:/var/www/html
-      networks:
-        - app-network
-      depends_on:
-        - db
-
-    db:
-      image: mysql:8.0
-      ports:
-        - "3306:3306"
-      environment:
-        - MYSQL_ROOT_PASSWORD=password
-        - MYSQL_DATABASE=gearfalcon_db_dev
-        - MYSQL_USER=gearfalcon_user
-        - MYSQL_PASSWORD=gearfalcon_pass
-      volumes:
-        - db_data:/var/lib/mysql
-        # Auto-import database schema on first run
-        - ./gearfalcon_db.sql:/docker-entrypoint-initdb.d/gearfalcon_db.sql:ro
-      networks:
-        - app-network
-
-  networks:
-    app-network:
-      driver: bridge
-
-  volumes:
-    db_data:
+volumes:
+  mysql_data:

@@ -107,16 +107,19 @@ class AuthController
             // Generate refresh token
             $refreshToken = $this->generateRefreshToken($user);
 
-            // Set both tokens as HTTP-only cookies
+            // Set both tokens as HTTP-only cookies (for direct backend calls)
             $this->setAccessTokenCookie($accessToken);
             $this->setRefreshTokenCookie($refreshToken);
 
             // Calculate expiration time
             $expiresIn = (int)(getenv('JWT_TTL_SECONDS') ?: 900);
 
-            // Return user data WITHOUT tokens in response body
+            // ✅ RETURN access_token in response body for Next.js middleware to set as cookie
+            // This allows the Next.js API route to create HTTP-only cookies on the frontend domain
             return $this->jsonResponse([
                 'success' => true,
+                'access_token' => $accessToken,      // ← Added for frontend
+                'refresh_token' => $refreshToken,    // ← Added for frontend
                 'expires_in' => $expiresIn,
                 'user' => [
                     'id' => $user->id,
@@ -130,6 +133,8 @@ class AuthController
             return $this->jsonResponse(['error' => $e->getMessage()], 401);
         }
     }
+
+
     public function register(array $request): string
     {
         try {
