@@ -27,12 +27,13 @@ return function(RouteCollector $r) {
     $r->addGroup('/auth', function (RouteCollector $r) {
         $r->addRoute('POST', '/login', [AuthController::class, 'login']);
         $r->addRoute('POST', '/register', [AuthController::class, 'register']);
+        $r->addRoute('POST', '/refresh', [AuthController::class, 'refresh']);
         $r->addRoute('POST', '/logout', [AuthController::class, 'logout']);
         $r->addRoute('POST', '/verify-email', [AuthController::class, 'verifyEmail']);
         $r->addRoute('POST', '/resend-verification', [AuthController::class, 'resendVerificationCode']);
     });
     
-    // Quote routes
+    // Quote routes  
     $r->addGroup('/quotes', function (RouteCollector $r) {
         $r->addRoute('POST', '', [QuoteController::class, 'create']);                 // create a quote
         $r->addRoute('POST', '/{id:\d+}/accept', [QuoteController::class, 'accept']); // accept a quote

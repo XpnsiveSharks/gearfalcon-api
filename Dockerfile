@@ -1,10 +1,4 @@
-# Multi-stage build for smaller production image
-FROM php:8.3-apache as base
-
-# Add metadata labels
-LABEL maintainer="XpnsiveSharks <aban.marynelle.tesoro@gmail.com>"
-LABEL version="1.0"
-LABEL description="GearFalcon API Docker Image"
+FROM php:8.2-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -16,60 +10,49 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Get latest Composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Create non-root user for security
-RUN groupadd -r gearfalcon && useradd -r -g gearfalcon gearfalcon
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy composer files first for better layer caching
-COPY --chown=gearfalcon:gearfalcon composer.json composer.lock* ./
+# Copy composer files first for better caching
+COPY composer.json composer.lock* ./
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader
+
+# Copy Apache configuration
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
 
 # Copy application code
-COPY --chown=gearfalcon:gearfalcon . .
+COPY . .
 
-# Set proper permissions
-RUN chmod -R 755 /var/www/html
+# Create storage directories and set proper permissions
+RUN mkdir -p /var/www/html/storage/logs \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 777 /var/www/html/storage/logs
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Enable Apache modules
+RUN a2enmod rewrite headers
 
-# Copy custom Apache configuration instead of using sed
-COPY <<EOF /etc/apache2/sites-available/000-default.conf
-<VirtualHost *:80>
-    ServerName localhost
-    DocumentRoot /var/www/html/public
+# Configure Apache for Docker
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-    <Directory /var/www/html/public>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-EOF
-
-# Add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
-
-# Switch to non-root user
-USER gearfalcon
+# Create startup script
+RUN echo '#!/bin/bash\n\
+apache2-foreground' > /usr/local/bin/start.sh && \
+chmod +x /usr/local/bin/start.sh
 
 # Expose port 80
 EXPOSE 80
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
+
 # Start Apache
-CMD ["apache2-foreground"]
+CMD ["/usr/local/bin/start.sh"]

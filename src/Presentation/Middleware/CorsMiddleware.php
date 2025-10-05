@@ -45,7 +45,7 @@ final class CorsMiddleware
      */
     public function __construct(
         array $allowedMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        array $allowedHeaders = ['Content-Type', 'Authorization'],
+        array $allowedHeaders = ['Content-Type', 'Authorization', 'X-Client-Version'],
         bool $allowCredentials = true
     ) {
         $this->allowedMethods = $allowedMethods;
@@ -58,8 +58,15 @@ final class CorsMiddleware
         $allowedOrigins = array_map('trim', explode(',', getenv('ALLOWED_ORIGIN') ?: '*'));
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-        if (in_array($origin, $allowedOrigins) || in_array('*', $allowedOrigins)) {
-            header("Access-Control-Allow-Origin: $origin");
+        // More permissive CORS for development
+        $isDevelopment = getenv('APP_ENV') === 'development';
+
+        if (in_array($origin, $allowedOrigins) || in_array('*', $allowedOrigins) || $isDevelopment || empty($origin)) {
+            if (!empty($origin)) {
+                header("Access-Control-Allow-Origin: $origin");
+            } else {
+                header("Access-Control-Allow-Origin: *");
+            }
             header('Access-Control-Allow-Methods: ' . implode(', ', $this->allowedMethods));
             header('Access-Control-Allow-Headers: ' . implode(', ', $this->allowedHeaders));
             header('Vary: Origin'); // prevent cache issues
