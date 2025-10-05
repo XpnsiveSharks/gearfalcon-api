@@ -1,33 +1,25 @@
 <?php
+
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+// Enable error reporting for development
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 
-// Load environment variables - ADD THIS SECTION
-if (file_exists(__DIR__ . '/../.env')) {
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..', '.env');
-    $dotenv->load();
-} else {
-    // Log error if .env file is missing
-    error_log("WARNING: .env file not found at: " . __DIR__ . '/../.env');
-}
+// Set timezone
+date_default_timezone_set('Asia/Manila');
 
-use App\Presentation\Http\HttpKernel;
-use FastRoute\RouteCollector;
+// Autoloader (assuming Composer is installed)
+require_once __DIR__ . '/../vendor/autoload.php';
 
-// Load container
-$container = require __DIR__ . '/../src/Infrastructure/Container.php';
+// Load environment and container
+$container = require_once __DIR__ . '/../src/Infrastructure/Container.php';
 
-/*
- * Routes are not registered in the container because they are not services.
- * - Routes define application rules (URL → controller mapping).
- * - The container's responsibility is only to build and supply dependencies.
- */
-// Routes closure (function)
-$routesDefinition = require __DIR__ . '/../src/Presentation/Routes/routes.php';
+// Load routes
+$routes = require_once __DIR__ . '/../src/Presentation/Routes/routes.php';
 
-// Initialize kernel
-$kernel = new HttpKernel($container, $routesDefinition);
+// Create HTTP Kernel
+$kernel = new App\Presentation\Http\HttpKernel($container, $routes);
 
-// Handle request
+// Handle the request
 $kernel->handle();

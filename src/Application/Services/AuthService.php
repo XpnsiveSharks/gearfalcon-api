@@ -33,7 +33,7 @@ class AuthService
             $newHash = password_hash($password, PASSWORD_DEFAULT);
             $this->userRepository->update($user->id, ['password,' => $newHash]);
         }
-
+ 
         return $user;
     }
     public function logout(): bool // TO DO

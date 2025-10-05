@@ -137,19 +137,34 @@ class EmailVerificationService
     }
 
     /**
-     * Send verification email using PHPMailer
-     */
+      * Send verification email using PHPMailer
+      */
     private function sendVerificationEmail(string $toEmail, string $code): void
     {
         try {
+            // Check if SMTP is configured for development
+            $smtpHost = $this->getEnvVar('SMTP_HOST');
+            $smtpUser = $this->getEnvVar('SMTP_USERNAME');
+            $smtpPass = $this->getEnvVar('SMTP_PASSWORD');
+
+            // If SMTP is not configured, skip email sending in development
+            if (empty($smtpHost) || empty($smtpUser) || empty($smtpPass)) {
+                if (getenv('APP_ENV') === 'development') {
+                    error_log("DEVELOPMENT MODE: Skipping email sending for {$toEmail}. Code: {$code}");
+                    return; // Skip email sending in development
+                } else {
+                    throw new \Exception("SMTP configuration is required in production environment");
+                }
+            }
+
             $mail = new PHPMailer(true);
 
             // SMTP configuration
             $mail->isSMTP();
-            $mail->Host = $this->getEnvVar('SMTP_HOST', 'smtp.gmail.com');
+            $mail->Host = $smtpHost;
             $mail->SMTPAuth = true;
-            $mail->Username = $this->getEnvVar('SMTP_USERNAME');
-            $mail->Password = $this->getEnvVar('SMTP_PASSWORD');
+            $mail->Username = $smtpUser;
+            $mail->Password = $smtpPass;
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = (int)$this->getEnvVar('SMTP_PORT', '587');
 

@@ -1,8 +1,11 @@
 # Enable mod_rewrite
 RewriteEngine On
 
-# Prevent access to dotfiles and system files
-RewriteRule (^\.|composer\.json|composer\.lock|vendor/) - [F,L]
+# Set the HTTP_AUTHORIZATION header for PHP
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# Prevent access to sensitive files
+RewriteRule (^\.|composer\.json|composer\.lock|\.env) - [F,L]
 
 # Redirect everything to index.php
 RewriteCond %{REQUEST_FILENAME} !-f

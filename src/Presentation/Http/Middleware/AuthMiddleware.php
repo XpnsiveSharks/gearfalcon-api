@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Presentation\Middleware;
+namespace App\Presentation\Http\Middleware;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\SignatureInvalidException;
-use UnexpectedValueException; 
+use UnexpectedValueException;
 
 /**
  * AuthMiddleware

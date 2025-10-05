@@ -136,6 +136,22 @@
       "response": []
     },
     {
+      "name": "POST Refresh Token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/auth/refresh",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["auth", "refresh"]
+        },
+        "description": "Refresh access token using HTTP-only refresh token cookie. No request body needed - refresh token is sent automatically via cookie."
+      },
+      "response": []
+    },
+    {
       "name": "POST Create Quote",
       "request": {
         "method": "POST",
