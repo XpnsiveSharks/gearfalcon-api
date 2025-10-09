@@ -72,7 +72,6 @@ class AuthController
         header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
         header('Access-Control-Max-Age: 86400'); // 24 hours preflight cache
     }
-// test
     public function login(array $request): string
     {
         $this->setCorsHeaders();
