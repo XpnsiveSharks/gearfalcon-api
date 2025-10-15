@@ -25,6 +25,18 @@ class AuthMiddleware
 {
     private string $jwtSecret;
 
+    /**
+     * @var string[]
+     */
+    private array $protectedPaths = [
+        '/admin',
+        '/customers', // Protects /customers/complete-profile
+        '/auth/logout',
+        '/auth/customer-info',
+        '/quotes', // Protects all quote creation/management
+        // Add other protected paths here
+    ];
+
     public function __construct(string $jwtSecret)
     {
         $this->jwtSecret = $jwtSecret;
@@ -36,55 +48,64 @@ class AuthMiddleware
      * @param array    $request  The request data (headers, server, etc.)
      * @param callable $next     The next middleware or controllera
      */
-    public function handle(array $request, callable $next)
+    public function handle(array &$request, callable $next)
     {
         $uri = $request['server']['REQUEST_URI']; // grabbing the current URL path from the request.
 
-        // Only protect specific dashboard routes
-        if (
-            str_starts_with($uri, '/admin') ||
-            str_starts_with($uri, '/technician') ||
-            str_starts_with($uri, '/user')
-        ) {
-            $headers = $request['headers'];
-
-            // Reject if Authorization header is missing
-            if (empty($headers['Authorization'])) {
-                http_response_code(401);
-                return json_encode(['error' => 'Missing Authorization header']);
-            }
-
-            // Header must be in "Bearer <token>" format
-            if (!preg_match('/Bearer\s(\S+)/', $headers['Authorization'], $matches)) {
-                http_response_code(401);
-                return json_encode(['error' => 'Invalid Authorization format']);
-            }
-
-            $token = $matches[1];
-
-            try {
-                // Decode and verify JWT with secret key
-                $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
-
-                // Attach decoded token payload to request
-                $request['user'] = (array)$decoded;
-
-            } catch (ExpiredException $e) {
-                // Token is expired
-                http_response_code(401);
-                return json_encode(['error' => 'Token expired']);
-            } catch (SignatureInvalidException $e) {
-                // Token signature is invalid (wrong key or tampered)
-                http_response_code(401);
-                return json_encode(['error' => 'Invalid token signature']);
-            } catch (UnexpectedValueException $e) {
-                // Token could not be parsed/decoded
-                http_response_code(401);
-                return json_encode(['error' => 'Invalid token']);
+        $isProtectedRoute = false;
+        foreach ($this->protectedPaths as $path) {
+            if (str_starts_with($uri, $path)) {
+                $isProtectedRoute = true;
+                break;
             }
         }
 
-        // If route is not protected, or token is valid → continue
+        if (!$isProtectedRoute) {
+            // If the route is not in the protected list, just continue.
+            return $next($request);
+        }
+
+        // --- Authentication Logic for Protected Routes ---
+        $headers = $request['headers'];
+
+        if (empty($headers['Authorization'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Missing Authorization header']);
+            return; // Stop execution
+        }
+
+        if (!preg_match('/Bearer\s(\S+)/', $headers['Authorization'], $matches)) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid Authorization format']);
+            return; // Stop execution
+        }
+
+        $token = $matches[1];
+
+        try {
+            $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
+
+            // Fetch the full User model from the database
+            $user = \App\Infrastructure\Models\User::find($decoded->sub);
+
+            if (!$user) {
+                throw new \Exception('User not found for the provided token.');
+            }
+
+            // Attach the Eloquent User object to the request
+            $request['user'] = $user;
+
+        } catch (\Exception $e) {
+            // Catches ExpiredException, SignatureInvalidException, and our custom one
+            http_response_code(401);
+            // Use echo and return to stop execution, as this is a middleware
+            echo json_encode(['error' => 'Authentication failed: ' . $e->getMessage()]);
+            return; // Stop execution
+        }
+
+        // If the token is valid, the user object is attached to the request.
+        // Now, call the next handler (which will eventually be the controller)
+        // to continue processing the request.
         return $next($request);
     }
 }
