@@ -29,8 +29,8 @@ class AuthController
         $this->authService = $authService;
         $this->userRegistrationService = $userRegistrationService;
         $this->verificationService = $verificationService;
-        $this->jwtSecret = getenv('JWT_SECRET') ?: 'your-access-secret-key';
-        $this->jwtRefreshSecret = getenv('JWT_REFRESH_SECRET') ?: 'your-refresh-secret-key';
+        $this->jwtSecret = $_ENV['JWT_SECRET'] ?? 'your-access-secret-key';
+        $this->jwtRefreshSecret = $_ENV['JWT_REFRESH_SECRET'] ?? 'your-refresh-secret-key';
     }
 
     private function jsonResponse(array $data, int $statusCode = 200): string
@@ -376,5 +376,53 @@ class AuthController
     {
         // Rotate refresh token 50% of the time for better security
         return rand(1, 100) <= 50;
+    }
+
+    public function getCustomerInfo(array $request): string
+    {
+        $this->setCorsHeaders();
+
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User) {
+            return $this->jsonResponse(['error' => 'User not authenticated'], 401);
+        }
+
+        if ($user->role !== 'customer') {
+            return $this->jsonResponse(['error' => 'Access denied. Not a customer.'], 403);
+        }
+        
+        // Load the customer relationship to check if a customer profile exists
+        $user->load(['customer.addresses']);
+
+        if (!$user->customer) {
+            return $this->jsonResponse([
+                'error' => 'Customer profile not found. Please complete your registration.'
+            ], 404);
+        }
+        
+        $primaryAddress = $user->customer->addresses->first();
+
+        return $this->jsonResponse([
+            'success' => true,
+            'customer' => [
+                'customer_id' => $user->customer->id,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'is_verified' => (bool)$user->is_verified,
+                'company_name' => $user->customer->company_name,
+                'address' => $primaryAddress ? [
+                    'house_number' => $primaryAddress->house_number,
+                    'street' => $primaryAddress->street,
+                    'barangay' => $primaryAddress->barangay,
+                    'city' => $primaryAddress->city,
+                    'province' => $primaryAddress->province,
+                    'region' => $primaryAddress->region,
+                    'postal_code' => $primaryAddress->postal_code,
+                ] : null
+            ]
+        ]);
     }
 }

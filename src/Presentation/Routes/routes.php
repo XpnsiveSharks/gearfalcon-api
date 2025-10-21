@@ -1,6 +1,7 @@
 <?php
 use App\Presentation\Controllers\AuthController;
 use App\Presentation\Controllers\Customer\QuoteController;
+use App\Presentation\Controllers\Customer\CustomerController;
 use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Admin\AdminController;
 use App\Presentation\Controllers\CatalogController;
@@ -31,6 +32,7 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/logout', [AuthController::class, 'logout']);
         $r->addRoute('POST', '/verify-email', [AuthController::class, 'verifyEmail']);
         $r->addRoute('POST', '/resend-verification', [AuthController::class, 'resendVerificationCode']);
+        $r->addRoute('GET', '/customer-info', [AuthController::class, 'getCustomerInfo']);
     });
     
     // Quote routes  
@@ -43,6 +45,11 @@ return function(RouteCollector $r) {
 
     // Customer quotes
     $r->addRoute('GET', '/customers/{id:\d+}/quotes', [QuoteController::class, 'getByCustomer']);
+
+    // Customer profile routes
+    $r->addGroup('/customers', function (RouteCollector $r) {
+        $r->addRoute('POST', '/complete-profile', [CustomerController::class, 'completeProfile']);
+    });
 
     // Public catalog routes
     $r->addGroup('/catalog', function (RouteCollector $r) {

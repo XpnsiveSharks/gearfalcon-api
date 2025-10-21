@@ -3,24 +3,13 @@ declare(strict_types=1);
 
 namespace App\Presentation\Middleware;
 
+use App\Infrastructure\Models\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\SignatureInvalidException;
-use UnexpectedValueException; 
+use UnexpectedValueException;
 
-/**
- * AuthMiddleware
- *
- * This middleware checks if a request going to certain "protected" routes
- * (admin, technician, user dashboards) has a valid JWT in the Authorization header.
- * 
- * If the token is valid, it attaches the decoded payload (user info, role, etc.)
- * to the request so controllers can use it.
- * 
- * If the token is missing, expired, or invalid → it stops the request and 
- * returns a 401 Unauthorized JSON response.
- */
 class AuthMiddleware
 {
     private string $jwtSecret;
@@ -30,59 +19,82 @@ class AuthMiddleware
         $this->jwtSecret = $jwtSecret;
     }
 
-    /**
-     * Handle the request and enforce JWT authentication for protected routes.
-     *
-     * @param array    $request  The request data (headers, server, etc.)
-     * @param callable $next     The next middleware or controllera
-     */
     public function handle(array $request, callable $next)
     {
+        $debug = [];
         $uri = $request['server']['REQUEST_URI']; // grabbing the current URL path from the request.
+        $debug['uri'] = $uri;
 
         // Only protect specific dashboard routes
         if (
             str_starts_with($uri, '/admin') ||
             str_starts_with($uri, '/technician') ||
-            str_starts_with($uri, '/user')
+            str_starts_with($uri, '/user') ||
+            str_starts_with($uri, '/auth/customer-info') ||
+            str_starts_with($uri, '/customers')
         ) {
-            $headers = $request['headers'];
+            $debug['route'] = 'protected';
+            $headers = getallheaders();
+            $debug['headers'] = $headers;
 
             // Reject if Authorization header is missing
             if (empty($headers['Authorization'])) {
+                $debug['error'] = 'Missing Authorization header';
                 http_response_code(401);
-                return json_encode(['error' => 'Missing Authorization header']);
+                echo json_encode($debug);
+                return;
             }
 
             // Header must be in "Bearer <token>" format
             if (!preg_match('/Bearer\s(\S+)/', $headers['Authorization'], $matches)) {
+                $debug['error'] = 'Invalid Authorization format';
                 http_response_code(401);
-                return json_encode(['error' => 'Invalid Authorization format']);
+                echo json_encode($debug);
+                return;
             }
 
             $token = $matches[1];
+            $debug['token'] = $token;
 
             try {
                 // Decode and verify JWT with secret key
                 $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
+                $debug['decoded'] = (array)$decoded;
 
-                // Attach decoded token payload to request
-                $request['user'] = (array)$decoded;
+                // Find the user from the database and attach to the request
+                $user = User::find($decoded->sub);
+                $debug['user'] = $user ? $user->toArray() : null;
+
+                if (!$user) {
+                    $debug['error'] = 'User not found in DB';
+                    http_response_code(401);
+                    echo json_encode($debug);
+                    return;
+                }
+
+                $request['user'] = $user;
 
             } catch (ExpiredException $e) {
-                // Token is expired
+                $debug['error'] = 'Token expired';
                 http_response_code(401);
-                return json_encode(['error' => 'Token expired']);
+                echo json_encode($debug);
+                return;
             } catch (SignatureInvalidException $e) {
-                // Token signature is invalid (wrong key or tampered)
+                $debug['error'] = 'Invalid token signature';
                 http_response_code(401);
-                return json_encode(['error' => 'Invalid token signature']);
+                echo json_encode($debug);
+                return;
             } catch (UnexpectedValueException $e) {
-                // Token could not be parsed/decoded
+                $debug['error'] = 'Invalid token';
                 http_response_code(401);
-                return json_encode(['error' => 'Invalid token']);
+                echo json_encode($debug);
+                return;
             }
+        } else {
+            $debug['route'] = 'public';
         }
+
+        $request['debug'] = $debug;
 
         // If route is not protected, or token is valid → continue
         return $next($request);
