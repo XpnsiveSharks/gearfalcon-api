@@ -33,6 +33,7 @@ use App\Application\Services\ServiceCatalogService;
 use App\Application\Admin\Services\PromotionService;
 use App\Application\Services\EmailVerificationService;
 use App\Application\Admin\Services\ServiceCategoryService;
+use App\Application\Services\Customer\CustomerProfileService;
 
 // Controllers
 use App\Presentation\Controllers\AuthController;
@@ -40,6 +41,7 @@ use App\Presentation\Controllers\Customer\QuoteController;
 use App\Presentation\Controllers\TechnicianController;
 use App\Presentation\Controllers\Admin\AdminController;
 use App\Presentation\Controllers\CatalogController;
+use App\Presentation\Controllers\Customer\CustomerController;
 
 // Middleware
 use App\Presentation\Middleware\CorsMiddleware;
@@ -93,6 +95,7 @@ $promotionService = new PromotionService($userRepository, $technicianRepository)
 $emailVerificationService = new EmailVerificationService($userRepository);
 $serviceCategoryService = new ServiceCategoryService($serviceCategoryRepository);
 $serviceCatalogService = new ServiceCatalogService($serviceRepository, $serviceCategoryRepository);
+$customerProfileService = new CustomerProfileService();
 
 // Middleware
 $corsMiddleware = new CorsMiddleware();
@@ -104,6 +107,7 @@ $authController = new AuthController($authService, $userRegistrationService,  $e
 $quoteController = new QuoteController($quoteService);
 $adminController = new AdminController($serviceCategoryService);
 $catalogController = new CatalogController($serviceCatalogService);
+$customerController = new CustomerController($customerProfileService);
 // $technicianController = new TechnicianController($promotionService); remove for now since wala pang nakalagay sa tecnh controller
 
 // DI Container
@@ -117,6 +121,7 @@ $container = [
     ServiceCategoryService::class => $serviceCategoryService,
     ServiceCategoryRepository::class => $serviceCategoryRepository,
     ServiceCatalogService::class => $serviceCatalogService,
+    CustomerController::class => $customerController,
     // 'App\Presentation\Controllers\TechnicianController' => $technicianController, same here wala pang nakalagay sa technician controller
 ];
 

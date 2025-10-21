@@ -30,7 +30,8 @@ class AuthMiddleware
             str_starts_with($uri, '/admin') ||
             str_starts_with($uri, '/technician') ||
             str_starts_with($uri, '/user') ||
-            str_starts_with($uri, '/auth/customer-info')
+            str_starts_with($uri, '/auth/customer-info') ||
+            str_starts_with($uri, '/customers')
         ) {
             $debug['route'] = 'protected';
             $headers = getallheaders();
