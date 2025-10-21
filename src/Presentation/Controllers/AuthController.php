@@ -393,7 +393,7 @@ class AuthController
         }
         
         // Load the customer relationship to check if a customer profile exists
-        $user->load('customer');
+        $user->load(['customer.addresses']);
 
         if (!$user->customer) {
             return $this->jsonResponse([
@@ -401,15 +401,27 @@ class AuthController
             ], 404);
         }
         
+        $primaryAddress = $user->customer->addresses->first();
+
         return $this->jsonResponse([
             'success' => true,
             'customer' => [
-                'customer_id' => $user->customer->id, // ID from the 'customers' table
-                'user_id' => $user->id, // ID from the 'users' table
+                'customer_id' => $user->customer->id,
+                'user_id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
-                'is_verified' => (bool)$user->is_verified
+                'is_verified' => (bool)$user->is_verified,
+                'company_name' => $user->customer->company_name,
+                'address' => $primaryAddress ? [
+                    'house_number' => $primaryAddress->house_number,
+                    'street' => $primaryAddress->street,
+                    'barangay' => $primaryAddress->barangay,
+                    'city' => $primaryAddress->city,
+                    'province' => $primaryAddress->province,
+                    'region' => $primaryAddress->region,
+                    'postal_code' => $primaryAddress->postal_code,
+                ] : null
             ]
         ]);
     }
