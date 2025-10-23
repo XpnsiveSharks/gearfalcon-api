@@ -33,6 +33,7 @@ class CustomerProfileService
             // 1. Gumawa ng record sa 'customers' table
             $customer = $user->customer()->create([
                 'company_name' => $data['company_name'],
+                'contact' => $data['contact'],
             ]);
 
             // 2. Gumawa ng record sa 'customer_addresses' table
@@ -55,6 +56,10 @@ class CustomerProfileService
     {
         if (empty($data['company_name'])) {
             throw new \InvalidArgumentException('Company name is required.');
+        }
+
+        if (empty($data['contact'])) {
+            throw new \InvalidArgumentException('Contact number is required.');
         }
 
         if (empty($data['address']) || !is_array($data['address']) || empty($data['address']['street']) || empty($data['address']['city'])) {

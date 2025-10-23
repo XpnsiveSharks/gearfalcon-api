@@ -34,14 +34,18 @@ class CustomerController
         if (!$user instanceof User) {
             return $this->jsonResponse(['error' => 'User not authenticated'], 401);
         }
-
+        
         try {
             $customer = $this->customerProfileService->createCustomerProfile($user, $request);
+
+            // Load the newly created address to return the full profile
+            $customer->load('addresses');
 
             return $this->jsonResponse([
                 'success' => true,
                 'message' => 'Customer profile completed successfully.',
-                'customer_id' => $customer->id
+                // Return the full customer object, which is more useful
+                'customer' => $customer->toArray()
             ], 201);
         } catch (\Exception $e) {
             return $this->jsonResponse(['error' => $e->getMessage()], 400);

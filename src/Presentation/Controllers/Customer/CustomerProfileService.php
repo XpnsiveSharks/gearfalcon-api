@@ -32,9 +32,8 @@ class CustomerProfileService
         return DB::transaction(function () use ($user, $data) {
             // 1. Gumawa ng record sa 'customers' table
             $customer = $user->customer()->create([
-                'first_name' => $data['first_name'],
-                'last_name' => $data['last_name'],
-                'phone' => $data['phone'],
+                'company_name' => $data['company_name'],
+                'contact' => $data['contact'],
                 // Pwede magdagdag ng iba pang fields dito
             ]);
 
@@ -54,8 +53,8 @@ class CustomerProfileService
 
     private function validateInput(array $data): void
     {
-        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['phone'])) {
-            throw new \InvalidArgumentException('First name, last name, and phone are required.');
+        if (empty($data['company_name']) || empty($data['contact'])) {
+            throw new \InvalidArgumentException('Company name and contact are required.');
         }
 
         if (empty($data['address']) || !is_array($data['address']) || empty($data['address']['street']) || empty($data['address']['city'])) {

@@ -11,7 +11,7 @@ class Customer extends Model
     protected $table = 'customers';
 
     protected $fillable = [
-        'user_id', 'company_name'
+        'user_id', 'company_name', 'contact'
     ];
 
     // Relationships
