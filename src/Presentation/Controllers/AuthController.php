@@ -410,6 +410,7 @@ class AuthController
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'contact' => $user->customer->contact,
                 'role' => $user->role,
                 'is_verified' => (bool)$user->is_verified,
                 'company_name' => $user->customer->company_name,
