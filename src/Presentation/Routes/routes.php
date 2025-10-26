@@ -53,7 +53,9 @@ return function(RouteCollector $r) {
 
     // Public catalog routes
     $r->addGroup('/catalog', function (RouteCollector $r) {
-        $r->addRoute('GET', '/categories', [CatalogController::class, 'getCategories']);
+        // $r->addRoute('GET', '/categories', [CatalogController::class, 'getCategories']);
+        $r->addRoute('GET', '/services', [AdminController::class, 'listServices']);            // list services
+        $r->addRoute('GET', '/categories', [AdminController::class, 'index']);            // list categories
     });
 
     // Admin routes
