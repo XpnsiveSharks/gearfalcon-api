@@ -33,6 +33,7 @@ use App\Application\Services\ServiceCatalogService;
 use App\Application\Admin\Services\PromotionService;
 use App\Application\Services\EmailVerificationService;
 use App\Application\Admin\Services\ServiceCategoryService;
+use App\Application\Admin\Services\ServiceService;
 use App\Application\Services\Customer\CustomerProfileService;
 
 // Controllers
@@ -94,6 +95,7 @@ $quoteService = new QuoteService($quoteRepository, $jobRepository);
 $promotionService = new PromotionService($userRepository, $technicianRepository);
 $emailVerificationService = new EmailVerificationService($userRepository);
 $serviceCategoryService = new ServiceCategoryService($serviceCategoryRepository);
+$serviceService = new ServiceService($serviceRepository);
 $serviceCatalogService = new ServiceCatalogService($serviceRepository, $serviceCategoryRepository);
 $customerProfileService = new CustomerProfileService();
 
@@ -105,7 +107,7 @@ $authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
 // Controllers
 $authController = new AuthController($authService, $userRegistrationService,  $emailVerificationService);
 $quoteController = new QuoteController($quoteService);
-$adminController = new AdminController($serviceCategoryService);
+$adminController = new AdminController($serviceCategoryService, $serviceService);
 $catalogController = new CatalogController($serviceCatalogService);
 $customerController = new CustomerController($customerProfileService);
 // $technicianController = new TechnicianController($promotionService); remove for now since wala pang nakalagay sa tecnh controller
@@ -119,6 +121,7 @@ $container = [
     AdminController::class => $adminController,
     CatalogController::class => $catalogController,
     ServiceCategoryService::class => $serviceCategoryService,
+    ServiceService::class => $serviceService,
     ServiceCategoryRepository::class => $serviceCategoryRepository,
     ServiceCatalogService::class => $serviceCatalogService,
     CustomerController::class => $customerController,

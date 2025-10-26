@@ -68,5 +68,12 @@ return function(RouteCollector $r) {
             $r->addRoute('PUT', '/{id:\d+}', [AdminController::class, 'update']);  // update category
             $r->addRoute('DELETE', '/{id:\d+}', [AdminController::class, 'destroy']); // soft delete category
         });
+
+        $r->addGroup('/services', function (RouteCollector $r) {
+            $r->addRoute('GET', '', [AdminController::class, 'listServices']);            // list services
+            $r->addRoute('POST', '', [AdminController::class, 'createService']);          // create service
+            $r->addRoute('PUT', '/{id:\d+}', [AdminController::class, 'updateService']);  // update service
+            $r->addRoute('DELETE', '/{id:\d+}', [AdminController::class, 'deleteService']); // soft delete service
+        }); 
     });
 };
