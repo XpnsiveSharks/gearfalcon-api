@@ -11,6 +11,7 @@ yarn-error.log*
 .env.local
 .env.production
 .env.*.local
+.env.development
 
 # Docker secrets and sensitive files
 secrets/
