@@ -27,6 +27,12 @@ class JobRepository extends Repository
             ->whereHas('assignments', function ($query) use ($technicianId) {
                 $query->where('technician_id', $technicianId);
             })
+            ->with([
+                'customer.user',
+                'customerAddress',
+                'service',
+                'assignments.technician.user'
+            ])
             ->get();
     }
 

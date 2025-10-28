@@ -36,4 +36,9 @@ class User extends Model
     {
         return $this->hasOne(Technician::class);
     }
+
+    public function jobs()
+    {
+        return $this->hasMany(Job::class, 'customer_id', 'id');
+    }
 }

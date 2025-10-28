@@ -68,7 +68,7 @@ CREATE TABLE technicians (
 -- SKILLS
 CREATE TABLE skills (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) UNIQUE NOT NULL,
   description TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -144,13 +144,15 @@ CREATE TABLE jobs (
   customer_address_id BIGINT, -- FK → customer_addresses.id
   service_id BIGINT, -- FK → services.id
   cart_id BIGINT NULL, -- FK → carts.id
-  status ENUM('pending','in_progress','completed','cancelled') DEFAULT 'pending',
+  status ENUM('pending_admin_assignment','available_for_claim','claimed','in_progress','completed','cancelled') DEFAULT 'available_for_claim',
   scheduled_date DATE,
   completed_date DATE,
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
+  job_board_expiry_at TIMESTAMP NULL, -- When the job board phase ends, if applicable
+  is_priority BOOLEAN DEFAULT FALSE, -- If true, skips job board and goes directly to admin assignment
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
   FOREIGN KEY (customer_address_id) REFERENCES customer_addresses(id) ON DELETE CASCADE,
   FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE,

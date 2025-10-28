@@ -8,6 +8,11 @@ class JobAssignment extends Model
 {
     use SoftDeletes;
 
+    /**
+     * Indicates if the model should be timestamped.
+     * @var bool
+     */
+    public $timestamps = false;
     protected $table = 'job_assignments';
 
     protected $fillable = [

@@ -1,42 +1,67 @@
 <?php
+
 namespace App\Infrastructure\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Job extends Model
 {
-    use SoftDeletes;
-
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'jobs';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'customer_id', 'customer_address_id', 'service_id',
-        'cart_id', 'status', 'scheduled_date', 'completed_date', 'notes'
+        'customer_id',
+        'customer_address_id',
+        'service_id',
+        'cart_id',
+        'status',
+        'scheduled_date',
+        'completed_date',
+        'notes',
+        'job_board_expiry_at',
+        'is_priority',
     ];
 
-    public function customer()
+    /**
+     * Get the customer that owns the job.
+     */
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
-    public function address()
+    /**
+     * Get the customer address for the job.
+     */
+    public function customerAddress(): BelongsTo
     {
         return $this->belongsTo(CustomerAddress::class, 'customer_address_id');
     }
 
-    public function service()
+    /**
+     * Get the service associated with the job.
+     */
+    public function service(): BelongsTo
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsTo(Service::class, 'service_id');
     }
 
-    public function cart()
+    /**
+     * Get the assignments for the job.
+     */
+    public function assignments(): HasMany
     {
-        return $this->belongsTo(Cart::class);
-    }
-
-    public function assignments()
-    {
-        return $this->hasMany(JobAssignment::class);
+        return $this->hasMany(JobAssignment::class, 'job_id');
     }
 }

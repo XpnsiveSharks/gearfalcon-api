@@ -1,9 +1,10 @@
 <?php
-namespace App\Application\Services;
+namespace App\Application\Customer\Services;
 
 use App\Infrastructure\Repositories\QuoteRepository;
 use App\Infrastructure\Repositories\JobRepository;
 use Illuminate\Support\Facades\DB;
+use App\Application\Customer\Services\JobService; // Import the JobService
 use Exception;
 
 /**
@@ -25,17 +26,25 @@ class QuoteService
     private JobRepository $jobRepository;
 
     /**
+     * @var JobService $jobService Service for managing job-related operations.
+     */
+    private JobService $jobService;
+
+    /**
      * Constructor to set up the service with repositories for quotes and jobs.
      *
      * @param QuoteRepository $quoteRepository Handles quote database operations.
      * @param JobRepository $jobRepository Handles job database operations.
+     * @param JobService $jobService Handles job creation and assignment logic.
      */
     public function __construct(
         QuoteRepository $quoteRepository,
-        JobRepository $jobRepository
+        JobRepository $jobRepository,
+        JobService $jobService
     ) {
         $this->quoteRepository = $quoteRepository;
         $this->jobRepository = $jobRepository;
+        $this->jobService = $jobService;
     }
 
     /**

@@ -4,9 +4,11 @@ use App\Presentation\Controllers\Technician\TechnicianController;
 use App\Presentation\Controllers\AuthController;
 use App\Presentation\Controllers\Customer\QuoteController;
 use App\Presentation\Controllers\Customer\CustomerController;
+use App\Presentation\Controllers\JobController;
 use App\Presentation\Controllers\Customer\CartController;
 use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Admin\AdminController;
+use App\Presentation\Controllers\CatalogController;
 use FastRoute\RouteCollector;
 
 return function(RouteCollector $r) {
@@ -35,6 +37,7 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/verify-email', [AuthController::class, 'verifyEmail']);
         $r->addRoute('POST', '/resend-verification', [AuthController::class, 'resendVerificationCode']);
         $r->addRoute('GET', '/customer-info', [AuthController::class, 'getCustomerInfo']);
+        $r->addRoute('POST', '/forgot-password', [AuthController::class, 'forgotPassword']); // TODO
     });
     
     // Quote routes  
@@ -50,7 +53,10 @@ return function(RouteCollector $r) {
 
     // Customer profile routes
     $r->addGroup('/customers', function (RouteCollector $r) {
+        // Complete customer profile
         $r->addRoute('POST', '/complete-profile', [CustomerController::class, 'completeProfile']);
+        $r->addRoute('POST', '/change-password', [CustomerController::class, 'changePassword']);// change password TODOOOOOO
+
 
         //Cart Items
         $r->addGroup('/cart', function (RouteCollector $r) {
@@ -63,6 +69,14 @@ return function(RouteCollector $r) {
 
         //Cart Status
         $r->addRoute('PUT', '/carts',[CartController::class, 'changeStatus']);
+
+        
+        //Customer Jobs
+        $r->addGroup('/jobs', function (RouteCollector $r) {
+            $r->addRoute('POST', '', [JobController::class, 'createJob']); // create a job
+            $r->addRoute('GET', '/{id:\d+}', [JobController::class, 'getJobDetails']); // get job details
+            $r->addRoute('PUT', '/{id:\d+}/cancel', [JobController::class, 'cancelJob']); // cancel a job
+        });
     });
 
     // Public catalog routes
@@ -75,6 +89,10 @@ return function(RouteCollector $r) {
     // Technician routes
     $r->addGroup('/technicians', function (RouteCollector $r) {
         $r->addRoute('PUT','/{id:[0-9a-fAF]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[TechnicianController::class, 'updateTechnician']);
+        $r->addRoute('GET', '/jobs/available', [JobController::class, 'getAvailableJobs']); // New route for available jobs
+        $r->addRoute('POST', '/jobs/{id:\d+}/claim', [JobController::class, 'claimJob']);
+        $r->addRoute('PUT', '/jobs/{id:\d+}/complete', [JobController::class, 'completeJob']); // Mark job as completed
+        $r->addRoute('GET', '/jobs/assigned', [JobController::class, 'assignedJobs']); // New route for assigned jobs
     });
 
 
@@ -111,6 +129,11 @@ return function(RouteCollector $r) {
             $r->addRoute('POST', '', [AdminController::class, 'createService']);          // create service
             $r->addRoute('PUT', '/{id:\d+}', [AdminController::class, 'updateService']);  // update service
             $r->addRoute('DELETE', '/{id:\d+}', [AdminController::class, 'deleteService']); // soft delete service
-        }); 
+        });
+
+        // Admin Job Assignment routes
+        $r->addGroup('/jobs', function (RouteCollector $r) {
+            $r->addRoute('GET', '/emergency', [JobController::class, 'getEmergencyJobs']); // list emergency jobs
+        });
     });
 };

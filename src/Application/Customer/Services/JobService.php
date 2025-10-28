@@ -1,10 +1,11 @@
 <?php
-namespace App\Application\Services\Job;
+namespace App\Application\Customer\Services;
 
 use App\Infrastructure\Repositories\JobRepository;
 use App\Infrastructure\Repositories\JobAssignmentRepository;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Support\Carbon;
+use App\Infrastructure\Models\Job;
 use Exception;
 
 /**
@@ -125,5 +126,119 @@ class JobService
     {
         // Fetch all jobs with related data using the JobRepository
         return $this->jobRepository->findAllWithDetails();
+    }
+
+    /**
+     * Allows a technician to claim an available job.
+     *
+     * @param int $jobId The ID of the job to claim.
+     * @param int $technicianId The ID of the claiming technician.
+     * @return mixed The updated job record.
+     * @throws Exception If the job is not found or not available for claim.
+     */
+    public function claimJob(int $jobId, int $technicianId)
+    {
+        return DB::connection()->transaction(function () use ($jobId, $technicianId) {
+            $job = $this->jobRepository->findById($jobId);
+
+            if (!$job) {
+                throw new Exception("Job not found.");
+            }
+
+            if ($job->status !== 'available_for_claim') {
+                throw new Exception("This job is not available for claiming.");
+            }
+
+            // Create the job assignment
+            $this->jobAssignmentRepository->create([
+                'job_id' => $jobId,
+                'technician_id' => $technicianId,
+                'assigned_at' => Carbon::now(),
+            ]);
+
+            // Update the job status to 'claimed'
+            return $this->jobRepository->update($jobId, ['status' => 'claimed']);
+        });
+    }
+
+    /**
+     * Gets all jobs that are available for technicians to claim.
+     * These are jobs with the status 'available_for_claim'.
+     *
+     * @return \Illuminate\Support\Collection A list of available jobs with their details.
+     */
+    public function getAvailableJobs()
+    {
+        return $this->jobRepository->findByStatus('available_for_claim');
+    }
+
+    /**
+     * Allows a technician to mark an assigned job as completed.
+     *
+     * @param int $jobId The ID of the job to complete.
+     * @param int $technicianId The ID of the technician completing the job.
+     * @return mixed The updated job record.
+     * @throws Exception If the job is not found, not assigned, or already completed/cancelled.
+     */
+    public function completeJob(int $jobId, int $technicianId)
+    {
+        return DB::connection()->transaction(function () use ($jobId, $technicianId) {
+            // Fetch the job with its assignments to check if the technician is assigned
+            $job = $this->jobRepository->findWithDetails($jobId);
+
+            if (!$job) {
+                throw new Exception("Job not found.");
+            }
+
+            // Check if the job is in a state that can be completed
+            if (!in_array($job->status, ['claimed', 'in_progress'])) {
+                throw new Exception("This job cannot be completed from its current status ({$job->status}).");
+            }
+
+            // Verify that the technician completing the job is actually assigned to it
+            $isAssigned = $job->assignments->contains('technician_id', $technicianId);
+            if (!$isAssigned) {
+                throw new Exception("Technician is not assigned to this job.");
+            }
+
+            // Soft-delete all assignments for this job
+            foreach ($job->assignments as $assignment) {
+                $this->jobAssignmentRepository->delete($assignment->id);
+            }
+
+            // Update the job status to 'completed' and set the completed_date
+            return $this->jobRepository->update($jobId, [
+                'status' => 'completed',
+                'completed_date' => Carbon::now(),
+            ]);
+        });
+    }
+
+    /**
+     * Gets all jobs that are scheduled within the next two days and are not completed or cancelled.
+     *
+     * @return \Illuminate\Support\Collection A list of emergency jobs.
+     */
+    public function getEmergencyJobs()
+    {
+        $twoDaysFromNow = Carbon::now()->addDays(2);
+ 
+        return Job::where('scheduled_date', '<=', $twoDaysFromNow)
+            ->where('scheduled_date', '>=', Carbon::now())
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->with(['customer.user', 'service', 'customerAddress', 'assignments.technician.user'])
+            ->get();
+    }
+
+    /**
+     * Gets all jobs assigned to a specific technician.
+     *
+     * @param int $technicianId The ID of the technician.
+     * @return \Illuminate\Support\Collection A list of jobs assigned to the technician.
+     */
+    public function getAssignedJobsForTechnician(int $technicianId)
+    {
+        // Fetch jobs assigned to the technician using the JobRepository
+        return $this->jobRepository->findByTechnicianId($technicianId);
     }
 }

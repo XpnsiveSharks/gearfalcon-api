@@ -34,6 +34,7 @@ class AuthMiddleware
         '/auth/logout',
         '/auth/customer-info',
         '/quotes', // Protects all quote creation/management
+        '/jobs', // Protects all job-related endpoints
         // Add other protected paths here
     ];
 
