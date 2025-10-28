@@ -49,7 +49,7 @@ class CustomerRepository extends Repository
      *
      * @return \Illuminate\Support\Collection
      */
-    public function findAllWithUsers()
+    public function findAllWithUserDetails()
     {
         return $this->model->with('user')->get();
     }

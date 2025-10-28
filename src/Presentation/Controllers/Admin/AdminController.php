@@ -1,28 +1,34 @@
 <?php
 namespace App\Presentation\Controllers\Admin;
 
+use App\Application\Admin\Services\AdminService;
 use App\Application\Admin\Services\PromotionService;
 use App\Application\Admin\Services\ServiceCategoryService;
 use App\Application\Admin\Services\ServiceService;
 use App\Application\Admin\Services\AdminSkillService;
-
+use App\Infrastructure\Models\User;
+use App\Infrastructure\Repositories\CustomerRepository;
+use Exception;
 class AdminController
 {
     private ServiceCategoryService $serviceCategoryService;
     private ServiceService $serviceService;
     private PromotionService $promotionService;
     private AdminSkillService $adminSkillService;
+    private CustomerRepository $customerRepository;
 
     public function __construct(
         ServiceCategoryService $serviceCategoryService, 
         ServiceService $serviceService,
         PromotionService $promotionService,
-        AdminSkillService $adminSkillService) 
+        AdminSkillService $adminSkillService,
+        CustomerRepository $customerRepository) 
         {
         $this->serviceCategoryService = $serviceCategoryService;
         $this->serviceService = $serviceService;
         $this->promotionService = $promotionService;
         $this->adminSkillService = $adminSkillService;
+        $this->customerRepository = $customerRepository;
     }
 
     private function jsonResponse(array $data, int $statusCode = 200): string
@@ -76,6 +82,31 @@ class AdminController
     {
         $technicians = $this->promotionService->listTechnicians();
         return $this->jsonResponse($technicians->toArray());
+    }
+
+    public function listCustomers(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        // 1. Ensure the user is an authenticated admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            // 2. Call the repository to get all customers
+            $customers = $this->customerRepository->findAllWithUserDetails();
+
+            if ($customers->isEmpty()) {
+                return $this->jsonResponse(['customers' => []]);
+            }
+
+            // 3. Return the list of customers
+            return $this->jsonResponse(['customers' => $customers->toArray()]);
+        } catch (Exception $e) {
+            // Handle potential errors
+            return $this->jsonResponse(['error' => 'Could not retrieve customers: ' . $e->getMessage()], 500);
+        }
     }
 
     public function listServices(): string

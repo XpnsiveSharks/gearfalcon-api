@@ -8,7 +8,6 @@ use App\Presentation\Controllers\JobController;
 use App\Presentation\Controllers\Customer\CartController;
 use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Admin\AdminController;
-use App\Presentation\Controllers\CatalogController;
 use FastRoute\RouteCollector;
 
 return function(RouteCollector $r) {
@@ -99,6 +98,8 @@ return function(RouteCollector $r) {
 
     // Admin routes
     $r->addGroup('/admin', function (RouteCollector $r) {
+        $r->addRoute('GET', '/customers', [AdminController::class, 'listCustomers']);
+
         // Technician routes
         $r->addRoute('POST', '/technicians/promote', [UserController::class, 'promote']);
         $r->addRoute('DELETE','/technicians/demote/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[UserController::class, 'demote']);
