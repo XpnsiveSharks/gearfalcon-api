@@ -34,6 +34,17 @@ class TechnicianRepository extends Repository
     }
 
     /**
+     * Find a technician by linked User ID, including soft-deleted records.
+     *
+     * @param string $userId
+     * @return Technician|null
+     */
+    public function findWithTrashed(string $userId): ?Technician
+    {
+        return $this->model->withTrashed()->where('user_id', $userId)->first();
+    }
+
+    /**
      * Find a technician and eager-load skills.
      *
      * @param int $id

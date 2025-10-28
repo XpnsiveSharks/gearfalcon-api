@@ -1,10 +1,12 @@
 <?php
+
+use App\Presentation\Controllers\Technician\TechnicianController;
 use App\Presentation\Controllers\AuthController;
 use App\Presentation\Controllers\Customer\QuoteController;
 use App\Presentation\Controllers\Customer\CustomerController;
+use App\Presentation\Controllers\Customer\CartController;
 use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Admin\AdminController;
-use App\Presentation\Controllers\CatalogController;
 use FastRoute\RouteCollector;
 
 return function(RouteCollector $r) {
@@ -49,6 +51,18 @@ return function(RouteCollector $r) {
     // Customer profile routes
     $r->addGroup('/customers', function (RouteCollector $r) {
         $r->addRoute('POST', '/complete-profile', [CustomerController::class, 'completeProfile']);
+
+        //Cart Items
+        $r->addGroup('/cart', function (RouteCollector $r) {
+            $r->addRoute('GET', '', [CartController::class, 'getCartItems']);
+            $r->addRoute('POST', '/items', [CartController::class, 'addToCart']);
+            $r->addRoute('DELETE', '/items/{id:\d+}', [CartController::class, 'removeFromCart']);
+            $r->addRoute('PUT', '/items/{id:\d+}', [CartController::class, 'updateCartItem']);
+            $r->addRoute('DELETE', '', [CartController::class, 'clearCart']);
+        });
+
+        //Cart Status
+        $r->addRoute('PUT', '/carts',[CartController::class, 'changeStatus']);
     });
 
     // Public catalog routes
@@ -58,10 +72,31 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/categories', [AdminController::class, 'index']);            // list categories
     });
 
+    // Technician routes
+    $r->addGroup('/technicians', function (RouteCollector $r) {
+        $r->addRoute('PUT','/{id:[0-9a-fAF]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[TechnicianController::class, 'updateTechnician']);
+    });
+
+
+
     // Admin routes
     $r->addGroup('/admin', function (RouteCollector $r) {
         // Technician routes
         $r->addRoute('POST', '/technicians/promote', [UserController::class, 'promote']);
+        $r->addRoute('DELETE','/technicians/demote/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[UserController::class, 'demote']);
+        $r->addRoute('GET', '/technicians', [AdminController::class, 'listTechnicians']);
+
+        // Admin-only routes to manage technician skills
+        $r->addRoute('POST', '/technicians/{id:\d+}/skills', [AdminController::class, 'assignSkill']);
+        $r->addRoute('DELETE', '/technicians/{technician_id:\d+}/skills/{skill_id:\d+}', [AdminController::class, 'removeSkill']);
+        
+        // Admin-only routes to manage master skills list
+        $r->addGroup('/skills', function (RouteCollector $r) {
+            $r->addRoute('POST', '', [AdminController::class, 'createSkill']); // Create a new skill
+            $r->addRoute('GET', '', [AdminController::class, 'listSkills']);   // List all skills
+            $r->addRoute('PUT', '/{id:\d+}', [AdminController::class, 'updateSkill']); // Update a skill
+            $r->addRoute('DELETE', '/{id:\d+}', [AdminController::class, 'deleteSkill']); // Delete a skill
+        });
 
         // Service Category routes
         $r->addGroup('/categories', function (RouteCollector $r) {

@@ -30,14 +30,68 @@ class PromotionService
      */
     public function promoteToTechnician(string $userId, array $technicianData)
     {
-        // Update the user's role to 'technician' in the user repository.
-        $this->userRepository->update($userId, ['role' => 'technician']);
+        // First, check for an existing technician record, including soft-deleted ones.
+        $technician = $this->technicianRepository->findWithTrashed($userId);
 
-       // Create a technician profile linked to the user, including optional fields like experience years.
-        return $this->technicianRepository->create([
-            'user_id' => $userId,
-            'specialization' => $technicianData['specialization'] ?? null,
-            'experience_years' => $technicianData['experience_years'] ?? null,
-        ]);
+        if ($technician) {
+            // If a record exists, restore it if it was soft-deleted.
+            if ($technician->trashed()) {
+                $technician->restore();
+            }
+
+            // Update the existing record with new data.
+            $technician->update([
+                'specialization' => $technicianData['specialization'] ?? $technician->specialization,
+                'experience_years' => $technicianData['experience_years'] ?? $technician->experience_years,
+            ]);
+        } else {
+            // If no record exists, create a new one.
+            $technician = $this->technicianRepository->create([
+                'user_id' => $userId,
+                'specialization' => $technicianData['specialization'] ?? null,
+                'experience_years' => $technicianData['experience_years'] ?? null,
+            ]);
+        }
+
+        $this->userRepository->update($userId, ['role' => 'technician']);
+        return $technician;
+    }
+
+    /**
+     * Demotes a technician back to a customer role.
+     *
+     * This method finds and deletes the technician profile associated with the user
+     * and then updates the user's role back to 'customer'.
+     *
+     * @param string $userId The ID of the user to demote.
+     * @return bool True on success, false if the technician profile was not found.
+     * @throws \Exception If the user does not exist.
+     */
+    public function demoteFromTechnician(string $userId): bool
+    {
+        // Find the technician profile by user_id
+        $technician = $this->technicianRepository->findByUserId($userId);
+
+        if (!$technician) {
+            // Or throw an exception if you prefer stricter handling
+            return false;
+        }
+
+        // Delete the technician profile and update the user's role
+        $this->technicianRepository->delete($technician->id);
+        $this->userRepository->update($userId, ['role' => 'customer']);
+
+        return true;
+    }
+
+    /**
+     * Retrieves all users with the 'technician' role, including their technician profile data.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function listTechnicians()
+    {
+        // Eager load the 'technician' relationship to get profile details along with user info.
+        return $this->userRepository->findByRole('technician')->load('technician');
     }
 }

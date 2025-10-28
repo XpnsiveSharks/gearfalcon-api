@@ -45,6 +45,32 @@ class UserController
     }
 
     /**
+     * Demote a technician to customer.
+     */
+    public function demote(array $request): string
+    {
+        $userId = $request['id'] ?? null;
+
+        if (!$userId) {
+            http_response_code(400);
+            return json_encode(['error' => 'User ID is required']);
+        }
+
+        try {
+            $success = $this->promotionService->demoteFromTechnician($userId);
+
+            if (!$success) {
+                throw new \Exception('Technician not found or demotion failed.');
+            }
+
+            return json_encode(['success' => true, 'message' => 'Technician demoted successfully.']);
+        } catch (\Exception $e) {
+            http_response_code(404); // Or 500 depending on expected errors
+            return json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Handle user registration.
      */
     public function register(array $request): string

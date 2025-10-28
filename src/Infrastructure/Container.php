@@ -7,40 +7,49 @@ use App\Infrastructure\Database\Database;
 // Models
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\Cart;
+use App\Infrastructure\Models\CartItem;
 use App\Infrastructure\Models\Customer;
 use App\Infrastructure\Models\Quote;
 use App\Infrastructure\Models\Job;
 use App\Infrastructure\Models\Technician;
 use App\Infrastructure\Models\ServiceCategory;
 use App\Infrastructure\Models\Service;
+use App\Infrastructure\Models\Skill;
 
 // Repositories
 use App\Infrastructure\Repositories\UserRepository;
 use App\Infrastructure\Repositories\CustomerRepository;
 use App\Infrastructure\Repositories\CartRepository;
+use App\Infrastructure\Repositories\CartItemRepository;
 use App\Infrastructure\Repositories\QuoteRepository;
 use App\Infrastructure\Repositories\JobRepository;
 use App\Infrastructure\Repositories\TechnicianRepository;
 use App\Infrastructure\Repositories\ServiceCategoryRepository;
+use App\Infrastructure\Repositories\SkillRepository;
 use App\Infrastructure\Repositories\ServiceRepository;
 
 // Services
 use App\Application\Services\UserRegistrationService;
 use App\Application\Customer\Services\CustomerRegistrationService;
 use App\Application\Services\AuthService;
+use App\Application\Customer\Services\CartService;
 use App\Application\Services\QuoteService;
 use App\Application\Services\ServiceCatalogService;
 use App\Application\Admin\Services\PromotionService;
 use App\Application\Services\EmailVerificationService;
 use App\Application\Admin\Services\ServiceCategoryService;
 use App\Application\Admin\Services\ServiceService;
+use App\Application\Admin\Services\AdminSkillService;
 use App\Application\Services\Customer\CustomerProfileService;
+use App\Application\Technician\Services\TechnicianService;
 
 // Controllers
 use App\Presentation\Controllers\AuthController;
+use App\Presentation\Controllers\Customer\CartController;
 use App\Presentation\Controllers\Customer\QuoteController;
-use App\Presentation\Controllers\TechnicianController;
 use App\Presentation\Controllers\Admin\AdminController;
+use App\Presentation\Controllers\Admin\UserController;
+use App\Presentation\Controllers\Technician\TechnicianController;
 use App\Presentation\Controllers\CatalogController;
 use App\Presentation\Controllers\Customer\CustomerController;
 
@@ -70,10 +79,12 @@ $pdo = $database->getCapsule();
 $userRepository = new UserRepository(new User);
 $customerRepository = new CustomerRepository(new Customer);
 $cartRepository = new CartRepository(new Cart);
+$cartItemRepository = new CartItemRepository(new CartItem);
 $quoteRepository = new QuoteRepository(new Quote);
 $jobRepository = new JobRepository(new Job);
 $technicianRepository = new TechnicianRepository(new Technician);
 $serviceCategoryRepository = new ServiceCategoryRepository(new ServiceCategory);
+$skillRepository = new SkillRepository(new Skill);
 $serviceRepository = new ServiceRepository(new Service);
 
 // Housekeeping: delete unverified users whose verification expired (>5 minutes)
@@ -91,41 +102,48 @@ try {
 $userRegistrationService = new UserRegistrationService($userRepository);
 $customerRegistrationService = new CustomerRegistrationService($userRegistrationService, $customerRepository);
 $authService = new AuthService($userRepository);
+$cartService = new CartService($cartRepository, $cartItemRepository, $serviceRepository);
 $quoteService = new QuoteService($quoteRepository, $jobRepository);
 $promotionService = new PromotionService($userRepository, $technicianRepository);
 $emailVerificationService = new EmailVerificationService($userRepository);
 $serviceCategoryService = new ServiceCategoryService($serviceCategoryRepository);
 $serviceService = new ServiceService($serviceRepository);
+$adminSkillService = new AdminSkillService($skillRepository, $technicianRepository);
 $serviceCatalogService = new ServiceCatalogService($serviceRepository, $serviceCategoryRepository);
 $customerProfileService = new CustomerProfileService();
+$technicianService = new TechnicianService($technicianRepository);
 
 // Middleware
 $corsMiddleware = new CorsMiddleware();
 // Auth middleware with JWT secret
 $authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
- 
+
 // Controllers
-$authController = new AuthController($authService, $userRegistrationService,  $emailVerificationService);
+$authController = new AuthController($authService, $userRegistrationService, $emailVerificationService);
+$cartController = new CartController($cartService);
 $quoteController = new QuoteController($quoteService);
-$adminController = new AdminController($serviceCategoryService, $serviceService);
+$adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService);
 $catalogController = new CatalogController($serviceCatalogService);
+$userController = new UserController($promotionService, $userRegistrationService);
 $customerController = new CustomerController($customerProfileService);
-// $technicianController = new TechnicianController($promotionService); remove for now since wala pang nakalagay sa tecnh controller
+$technicianController = new TechnicianController($technicianService);
 
 // DI Container
 $container = [
     CorsMiddleware::class => $corsMiddleware,
     AuthMiddleware::class => $authMiddleware,
     AuthController::class => $authController,
+    CartController::class => $cartController,
     QuoteController::class => $quoteController,
     AdminController::class => $adminController,
+    UserController::class => $userController,
     CatalogController::class => $catalogController,
     ServiceCategoryService::class => $serviceCategoryService,
     ServiceService::class => $serviceService,
     ServiceCategoryRepository::class => $serviceCategoryRepository,
     ServiceCatalogService::class => $serviceCatalogService,
     CustomerController::class => $customerController,
-    // 'App\Presentation\Controllers\TechnicianController' => $technicianController, same here wala pang nakalagay sa technician controller
+    TechnicianController::class => $technicianController,
 ];
 
 return $container;

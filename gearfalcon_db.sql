@@ -84,8 +84,9 @@ CREATE TABLE technician_skills (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
-  FOREIGN KEY (technician_id) REFERENCES technicians(id) ON DELETE CASCADE,
-  FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+  UNIQUE KEY `unique_technician_skill` (`technician_id`, `skill_id`),
+  FOREIGN KEY (`technician_id`) REFERENCES `technicians`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`skill_id`) REFERENCES `skills`(`id`) ON DELETE CASCADE
 );
 
 -- SERVICE CATEGORIES
