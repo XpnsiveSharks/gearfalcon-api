@@ -154,9 +154,9 @@ class JobController
     {
         $user = $request['user'] ?? null;
 
-        // Ensure the user is an authenticated technician
-        if (!$user instanceof User || $user->role !== 'technician') {
-            return $this->jsonResponse(['error' => 'User not authenticated or not a technician'], 401);
+        // Ensure the user is an authenticated technician or admin
+        if (!$user instanceof User || !in_array($user->role, ['technician', 'admin'])) {
+            return $this->jsonResponse(['error' => 'User not authenticated or not authorized'], 401);
         }
 
         try {
@@ -176,21 +176,21 @@ class JobController
         $user = $request['user'] ?? null;
         $jobId = $request['id'] ?? null;
 
-        // 1. Authenticate and authorize user as a technician
-        if (!$user instanceof User || $user->role !== 'technician' || !$user->technician) {
-            return $this->jsonResponse(['error' => 'User not authenticated or not a technician'], 401);
+        // 1. Authenticate and authorize user as a customer
+        if (!$user instanceof User || $user->role !== 'customer' || !$user->customer) {
+            return $this->jsonResponse(['error' => 'User not authenticated or not a customer'], 401);
         }
 
         // 2. Validate job ID
         if (!$jobId) {
             return $this->jsonResponse(['error' => 'Job ID is missing from the request'], 400);
         }
-
-        $technicianId = $user->technician->id;
+        
+        $customerId = $user->customer->id;
 
         try {
-            // 3. Call the service to complete the job
-            $job = $this->jobService->completeJob((int)$jobId, $technicianId);
+            // 3. Call the service to complete the job, verifying customer ownership
+            $job = $this->jobService->completeJob((int)$jobId, $customerId);
 
             if (!$job) {
                 // This case should ideally be caught by exceptions from the service,
@@ -252,6 +252,30 @@ class JobController
         } catch (Exception $e) {
             // Handle potential errors
             return $this->jsonResponse(['error' => 'Could not retrieve assigned jobs: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function TakenJobs(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        // 1. Ensure the user is an authenticated admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            // 2. Call the service to get all taken jobs (assignments)
+            $takenJobs = $this->jobService->getTakenJobs();
+
+            if ($takenJobs->isEmpty()) {
+                return $this->jsonResponse(['assignments' => []]);
+            }
+
+            return $this->jsonResponse(['assignments' => $takenJobs->toArray()]);
+        } catch (Exception $e) {
+            // Handle potential errors
+            return $this->jsonResponse(['error' => 'Could not retrieve taken jobs: ' . $e->getMessage()], 500);
         }
     }
 }

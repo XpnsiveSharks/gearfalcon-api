@@ -34,4 +34,14 @@ class TechnicianService
 
         return $technician->fresh();
     }
+       /**
+     * Get detailed information for a specific technician by their user ID.
+     *
+     * @param string $userId
+     * @return \App\Infrastructure\Models\Technician|null
+     */
+    public function getTechnicianDetailsByUserId(string $userId): ?\App\Infrastructure\Models\Technician
+    {
+        return $this->technicianRepository->findByUserIdWithDetails($userId);
+    }
 }

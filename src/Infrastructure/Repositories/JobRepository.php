@@ -41,7 +41,10 @@ class JobRepository extends Repository
      */
     public function findByStatus(string $status)
     {
-        return $this->model->where('status', $status)->get();
+        return $this->model
+            ->where('status', $status)
+            ->with(['customer.user', 'customerAddress', 'service'])
+            ->get();
     }
 
     /**

@@ -5,9 +5,11 @@ use App\Application\Admin\Services\AdminService;
 use App\Application\Admin\Services\PromotionService;
 use App\Application\Admin\Services\ServiceCategoryService;
 use App\Application\Admin\Services\ServiceService;
+use App\Application\Technician\Services\TechnicianService;
 use App\Application\Admin\Services\AdminSkillService;
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Repositories\CustomerRepository;
+use App\Infrastructure\Repositories\CustomerAddressRepository;
 use Exception;
 class AdminController
 {
@@ -16,19 +18,26 @@ class AdminController
     private PromotionService $promotionService;
     private AdminSkillService $adminSkillService;
     private CustomerRepository $customerRepository;
+    private CustomerAddressRepository $customerAddressRepository;
+    private TechnicianService $technicianService;
 
     public function __construct(
         ServiceCategoryService $serviceCategoryService, 
         ServiceService $serviceService,
         PromotionService $promotionService,
         AdminSkillService $adminSkillService,
-        CustomerRepository $customerRepository) 
+        CustomerRepository $customerRepository,
+        CustomerAddressRepository $customerAddressRepository,
+        TechnicianService $technicianService
+    ) 
         {
         $this->serviceCategoryService = $serviceCategoryService;
         $this->serviceService = $serviceService;
         $this->promotionService = $promotionService;
         $this->adminSkillService = $adminSkillService;
         $this->customerRepository = $customerRepository;
+        $this->customerAddressRepository = $customerAddressRepository;
+        $this->technicianService = $technicianService;
     }
 
     private function jsonResponse(array $data, int $statusCode = 200): string
@@ -84,6 +93,42 @@ class AdminController
         return $this->jsonResponse($technicians->toArray());
     }
 
+    public function getTechnicianDetails(array $request): string
+    {
+        $user = $request['user'] ?? null;
+        $technicianUserId = $request['id'] ?? null;
+
+        // 1. Ensure the user is authenticated
+        if (!$user instanceof User) {
+            return $this->jsonResponse(['error' => 'User not authenticated'], 401);
+        }
+
+        // Authorization Check: Allow if the user is an admin OR a technician requesting their own details.
+        $isOwner = ($user->role === 'technician' && $user->id === $technicianUserId);
+        $isAdmin = ($user->role === 'admin');
+        if (!$isAdmin && !$isOwner) {
+            return $this->jsonResponse(['error' => 'Forbidden. You do not have permission to view these details.'], 403);
+        }
+
+        if (!$technicianUserId) {
+            return $this->jsonResponse(['error' => 'Technician user ID is missing'], 400);
+        }
+
+        try {
+            // 2. Call the service to get technician details
+            $technician = $this->technicianService->getTechnicianDetailsByUserId($technicianUserId);
+
+            if (!$technician) {
+                return $this->jsonResponse(['error' => 'Technician not found'], 404);
+            }
+
+            // 3. Return the technician details
+            return $this->jsonResponse(['technician' => $technician->toArray()]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve technician details: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function listCustomers(array $request): string
     {
         $user = $request['user'] ?? null;
@@ -106,6 +151,31 @@ class AdminController
         } catch (Exception $e) {
             // Handle potential errors
             return $this->jsonResponse(['error' => 'Could not retrieve customers: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function listCustomerAddresses(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        // 1. Ensure the user is an authenticated admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            // 2. Call the repository to get all customer addresses
+            $addresses = $this->customerAddressRepository->findAllWithCustomerDetails();
+
+            if ($addresses->isEmpty()) {
+                return $this->jsonResponse(['addresses' => []]);
+            }
+
+            // 3. Return the list of addresses
+            return $this->jsonResponse(['addresses' => $addresses->toArray()]);
+        } catch (Exception $e) {
+            // Handle potential errors
+            return $this->jsonResponse(['error' => 'Could not retrieve customer addresses: ' . $e->getMessage()], 500);
         }
     }
 

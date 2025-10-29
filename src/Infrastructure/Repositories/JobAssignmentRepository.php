@@ -54,4 +54,18 @@ class JobAssignmentRepository extends Repository
     {
         return $this->model->with(['job', 'technician'])->find($id);
     }
+
+    /**
+     * Get all assignments with job and technician details.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function findAllWithDetails()
+    {
+        return $this->model->with([
+            'job.customer.user', 
+            'job.customerAddress', 
+            'technician.user'
+        ])->get();
+    }
 }

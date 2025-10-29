@@ -75,6 +75,7 @@ return function(RouteCollector $r) {
             $r->addRoute('POST', '', [JobController::class, 'createJob']); // create a job
             $r->addRoute('GET', '/{id:\d+}', [JobController::class, 'getJobDetails']); // get job details
             $r->addRoute('PUT', '/{id:\d+}/cancel', [JobController::class, 'cancelJob']); // cancel a job
+            $r->addRoute('PUT', '/{id:\d+}/complete', [JobController::class, 'completeJob']); // Mark job as completed by customer
         });
     });
 
@@ -88,9 +89,7 @@ return function(RouteCollector $r) {
     // Technician routes
     $r->addGroup('/technicians', function (RouteCollector $r) {
         $r->addRoute('PUT','/{id:[0-9a-fAF]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[TechnicianController::class, 'updateTechnician']);
-        $r->addRoute('GET', '/jobs/available', [JobController::class, 'getAvailableJobs']); // New route for available jobs
         $r->addRoute('POST', '/jobs/{id:\d+}/claim', [JobController::class, 'claimJob']);
-        $r->addRoute('PUT', '/jobs/{id:\d+}/complete', [JobController::class, 'completeJob']); // Mark job as completed
         $r->addRoute('GET', '/jobs/assigned', [JobController::class, 'assignedJobs']); // New route for assigned jobs
     });
 
@@ -99,12 +98,14 @@ return function(RouteCollector $r) {
     // Admin routes
     $r->addGroup('/admin', function (RouteCollector $r) {
         $r->addRoute('GET', '/customers', [AdminController::class, 'listCustomers']);
+        $r->addRoute('GET', '/customers/address', [AdminController::class, 'listCustomerAddresses']);
 
         // Technician routes
         $r->addRoute('POST', '/technicians/promote', [UserController::class, 'promote']);
         $r->addRoute('DELETE','/technicians/demote/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[UserController::class, 'demote']);
+        $r->addRoute('GET', '/technicians/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'getTechnicianDetails']);
         $r->addRoute('GET', '/technicians', [AdminController::class, 'listTechnicians']);
-
+        
         // Admin-only routes to manage technician skills
         $r->addRoute('POST', '/technicians/{id:\d+}/skills', [AdminController::class, 'assignSkill']);
         $r->addRoute('DELETE', '/technicians/{technician_id:\d+}/skills/{skill_id:\d+}', [AdminController::class, 'removeSkill']);
@@ -134,7 +135,10 @@ return function(RouteCollector $r) {
 
         // Admin Job Assignment routes
         $r->addGroup('/jobs', function (RouteCollector $r) {
+            $r->addRoute('GET', '/available', [JobController::class, 'getAvailableJobs']); // New route for available jobs
             $r->addRoute('GET', '/emergency', [JobController::class, 'getEmergencyJobs']); // list emergency jobs
+            $r->addRoute('GET', '/taken', [JobController::class, 'TakenJobs']); // New route for available jobs
+            $r->addRoute('POST', '/{id:\d+}/assign', [JobController::class, 'assignJob']); // assign job to technician
         });
     });
 };

@@ -175,30 +175,29 @@ class JobService
     /**
      * Allows a technician to mark an assigned job as completed.
      *
-     * @param int $jobId The ID of the job to complete.
-     * @param int $technicianId The ID of the technician completing the job.
+     * @param int $jobId The ID of the job to be completed.
+     * @param int $customerId The ID of the customer confirming completion.
      * @return mixed The updated job record.
      * @throws Exception If the job is not found, not assigned, or already completed/cancelled.
      */
-    public function completeJob(int $jobId, int $technicianId)
+    public function completeJob(int $jobId, int $customerId)
     {
-        return DB::connection()->transaction(function () use ($jobId, $technicianId) {
+        return DB::connection()->transaction(function () use ($jobId, $customerId) {
             // Fetch the job with its assignments to check if the technician is assigned
             $job = $this->jobRepository->findWithDetails($jobId);
 
             if (!$job) {
                 throw new Exception("Job not found.");
             }
-
+            
             // Check if the job is in a state that can be completed
             if (!in_array($job->status, ['claimed', 'in_progress'])) {
                 throw new Exception("This job cannot be completed from its current status ({$job->status}).");
             }
-
-            // Verify that the technician completing the job is actually assigned to it
-            $isAssigned = $job->assignments->contains('technician_id', $technicianId);
-            if (!$isAssigned) {
-                throw new Exception("Technician is not assigned to this job.");
+            
+            // Verify that the customer completing the job is the owner of the job
+            if ($job->customer_id !== $customerId) {
+                throw new Exception("You are not authorized to complete this job.");
             }
 
             // Soft-delete all assignments for this job
@@ -240,5 +239,15 @@ class JobService
     {
         // Fetch jobs assigned to the technician using the JobRepository
         return $this->jobRepository->findByTechnicianId($technicianId);
+    }
+
+    /**
+     * Gets all job assignments (taken jobs).
+     *
+     * @return \Illuminate\Support\Collection A list of all job assignments.
+     */
+    public function getTakenJobs()
+    {
+        return $this->jobAssignmentRepository->findAllWithDetails();
     }
 }

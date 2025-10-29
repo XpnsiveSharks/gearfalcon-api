@@ -8,6 +8,7 @@ use App\Infrastructure\Database\Database;
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\Cart;
 use App\Infrastructure\Models\CartItem;
+use App\Infrastructure\Models\CustomerAddress;
 use App\Infrastructure\Models\Customer;
 use App\Infrastructure\Models\Quote;
 use App\Infrastructure\Models\Job;
@@ -20,6 +21,7 @@ use App\Infrastructure\Models\Skill;
 // Repositories
 use App\Infrastructure\Repositories\UserRepository;
 use App\Infrastructure\Repositories\CustomerRepository;
+use App\Infrastructure\Repositories\CustomerAddressRepository;
 use App\Infrastructure\Repositories\CartRepository;
 use App\Infrastructure\Repositories\CartItemRepository;
 use App\Infrastructure\Repositories\QuoteRepository;
@@ -82,6 +84,7 @@ $pdo = $database->getCapsule();
 // Initialize repositories
 $userRepository = new UserRepository(new User);
 $customerRepository = new CustomerRepository(new Customer);
+$customerAddressRepository = new CustomerAddressRepository(new CustomerAddress);
 $cartRepository = new CartRepository(new Cart);
 $cartItemRepository = new CartItemRepository(new CartItem);
 $quoteRepository = new QuoteRepository(new Quote);
@@ -129,7 +132,7 @@ $authController = new AuthController($authService, $userRegistrationService, $em
 $cartController = new CartController($cartService);
 $quoteController = new QuoteController($quoteService);
 $jobController = new JobController($jobService); // Initialized JobController
-$adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService, $customerRepository);
+$adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService, $customerRepository, $customerAddressRepository, $technicianService);
 $catalogController = new CatalogController($serviceCatalogService);
 $userController = new UserController($promotionService, $userRegistrationService);
 $customerController = new CustomerController($customerProfileService);

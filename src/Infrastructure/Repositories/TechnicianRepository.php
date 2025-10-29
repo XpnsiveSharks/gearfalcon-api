@@ -75,4 +75,16 @@ class TechnicianRepository extends Repository
     {
         return $this->model->where('specialization', 'LIKE', "%{$specialization}%")->get();
     }
+
+    /**
+     * Find a technician by user ID with full details including user and skills.
+     *
+     * @param string $userId
+     * @return Technician|null
+     */
+    public function findByUserIdWithDetails(string $userId): ?Technician
+    {
+        // Eager load the 'user' and 'skills' relationships
+        return $this->model->where('user_id', $userId)->with(['user', 'skills'])->first();
+    }
 }
