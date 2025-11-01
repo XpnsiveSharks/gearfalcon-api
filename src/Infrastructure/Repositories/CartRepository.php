@@ -33,6 +33,7 @@ class CartRepository extends Repository
         return $this->model
             ->where('customer_id', $customerId)
             ->where('status', 'active')
+            ->with('items.service') // Eager load cart items and their associated services
             ->first();
     }
 
@@ -69,5 +70,16 @@ class CartRepository extends Repository
     public function findByCustomer(int $customerId)
     {
         return $this->model->where('customer_id', $customerId)->get();
+    }
+
+    /**
+     * Find a cart by the PayMongo payment_source_id.
+     *
+     * @param string $sourceId
+     * @return Cart|null
+     */
+    public function findBySourceId(string $sourceId): ?Cart
+    {
+        return $this->model->where('payment_source_id', $sourceId)->first();
     }
 }

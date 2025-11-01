@@ -129,6 +129,17 @@ class JobService
     }
 
     /**
+     * Gets all jobs for a specific customer.
+     *
+     * @param int $customerId The ID of the customer.
+     * @return \Illuminate\Support\Collection A list of jobs for the customer.
+     */
+    public function getJobsByCustomerId(int $customerId)
+    {
+        return $this->jobRepository->findByCustomerId($customerId);
+    }
+
+    /**
      * Allows a technician to claim an available job.
      *
      * @param int $jobId The ID of the job to claim.
@@ -249,5 +260,16 @@ class JobService
     public function getTakenJobs()
     {
         return $this->jobAssignmentRepository->findAllWithDetails();
+    }
+
+    /**
+     * Gets the technician assigned to a specific job.
+     *
+     * @param int $jobId The ID of the job.
+     * @return \App\Infrastructure\Models\JobAssignment|null The assignment with technician details.
+     */
+    public function getTechnicianForJob(int $jobId)
+    {
+        return $this->jobAssignmentRepository->findTechnicianByJobId($jobId);
     }
 }

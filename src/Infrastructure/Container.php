@@ -58,13 +58,14 @@ use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Technician\TechnicianController;
 use App\Presentation\Controllers\CatalogController;
 use App\Presentation\Controllers\Customer\CustomerController;
+use App\Presentation\Controllers\PaymentController; // ⬇️ ADDED THIS LINE (Step 1 of 3)
 
 // Middleware
 use App\Presentation\Middleware\CorsMiddleware;
 use App\Presentation\Middleware\AuthMiddleware;
 
 // Load .env with error handling
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../../', '.env.development');
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../../', '.env');
 $dotenv->load();
 
 // Build DB config
@@ -109,7 +110,7 @@ try {
 // Services
 $userRegistrationService = new UserRegistrationService($userRepository);
 $customerRegistrationService = new CustomerRegistrationService($userRegistrationService, $customerRepository);
-$authService = new AuthService($userRepository);
+$authService = new AuthService($userRepository, new EmailVerificationService($userRepository));
 $jobService = new JobService($jobRepository, $jobAssignmentRepository); // Initialized JobService
 $cartService = new CartService($cartRepository, $cartItemRepository, $serviceRepository);
 $quoteService = new QuoteService($quoteRepository, $jobRepository, $jobService); // Corrected QuoteService instantiation
@@ -119,7 +120,7 @@ $serviceCategoryService = new ServiceCategoryService($serviceCategoryRepository)
 $serviceService = new ServiceService($serviceRepository);
 $adminSkillService = new AdminSkillService($skillRepository, $technicianRepository);
 $serviceCatalogService = new ServiceCatalogService($serviceRepository, $serviceCategoryRepository);
-$customerProfileService = new CustomerProfileService();
+$customerProfileService = new CustomerProfileService($userRepository);
 $technicianService = new TechnicianService($technicianRepository);
 
 // Middleware
@@ -131,30 +132,40 @@ $authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
 $authController = new AuthController($authService, $userRegistrationService, $emailVerificationService);
 $cartController = new CartController($cartService);
 $quoteController = new QuoteController($quoteService);
-$jobController = new JobController($jobService); // Initialized JobController
+$jobController = new JobController($jobService, $cartService); // Initialized JobController
 $adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService, $customerRepository, $customerAddressRepository, $technicianService);
 $catalogController = new CatalogController($serviceCatalogService);
 $userController = new UserController($promotionService, $userRegistrationService);
 $customerController = new CustomerController($customerProfileService);
 $technicianController = new TechnicianController($technicianService);
 
+// ⬇️ ADDED THIS SECTION (Step 2 of 3) ⬇️
+// Initialized PaymentController with its 3 dependencies
+$paymentController = new PaymentController(
+    $cartService,
+    $jobService,
+    $customerAddressRepository
+);
+// ⬆️ END ADDED SECTION ⬆️
+
 // DI Container
 $container = [
-    CorsMiddleware::class => $corsMiddleware,
-    AuthMiddleware::class => $authMiddleware,
-    AuthController::class => $authController,
-    CartController::class => $cartController,
-    QuoteController::class => $quoteController,
-    JobController::class => $jobController, // Added JobController to the container
-    AdminController::class => $adminController,
-    UserController::class => $userController,
-    CatalogController::class => $catalogController,
-    ServiceCategoryService::class => $serviceCategoryService,
-    ServiceService::class => $serviceService,
-    ServiceCategoryRepository::class => $serviceCategoryRepository,
-    ServiceCatalogService::class => $serviceCatalogService,
-    CustomerController::class => $customerController,
-    TechnicianController::class => $technicianController,
+  CorsMiddleware::class => $corsMiddleware,
+  AuthMiddleware::class => $authMiddleware,
+  AuthController::class => $authController,
+  CartController::class => $cartController,
+  QuoteController::class => $quoteController,
+  JobController::class => $jobController, // Added JobController to the container
+  AdminController::class => $adminController,
+  UserController::class => $userController,
+  CatalogController::class => $catalogController,
+  ServiceCategoryService::class => $serviceCategoryService,
+  ServiceService::class => $serviceService,
+  ServiceCategoryRepository::class => $serviceCategoryRepository,
+  ServiceCatalogService::class => $serviceCatalogService,
+  CustomerController::class => $customerController,
+  TechnicianController::class => $technicianController,
+    PaymentController::class => $paymentController, // ⬇️ ADDED THIS LINE (Step 3 of 3)
 ];
 
 return $container;

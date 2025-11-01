@@ -40,7 +40,7 @@ class AuthController
         return json_encode($data);
     }
 
-    private function setCorsHeaders(): void
+    public static function setCorsHeaders(): void
     {
         // Docker-compatible CORS configuration
         $allowedOrigins = [
@@ -74,8 +74,6 @@ class AuthController
     }
     public function login(array $request): string
     {
-        $this->setCorsHeaders();
-
         $email = $request['email'] ?? '';
         $password = $request['password'] ?? '';
 
@@ -230,7 +228,6 @@ class AuthController
      */
     public function refresh(array $request): string
     {
-        $this->setCorsHeaders();
         try {
             // Get refresh token from httpOnly cookie
             $refreshToken = $_COOKIE['refresh_token'] ?? '';
@@ -380,8 +377,6 @@ class AuthController
 
     public function getCustomerInfo(array $request): string
     {
-        $this->setCorsHeaders();
-
         $user = $request['user'] ?? null;
 
         if (!$user instanceof User) {
@@ -415,6 +410,7 @@ class AuthController
                 'is_verified' => (bool)$user->is_verified,
                 'company_name' => $user->customer->company_name,
                 'address' => $primaryAddress ? [
+                    'address_id' => $primaryAddress->id,
                     'house_number' => $primaryAddress->house_number,
                     'street' => $primaryAddress->street,
                     'barangay' => $primaryAddress->barangay,
@@ -425,5 +421,46 @@ class AuthController
                 ] : null
             ]
         ]);
+    }
+
+    /**
+     * Handles the request to change a user's email address.
+     *
+     * @param array $request The HTTP request data.
+     * @return string JSON response.
+     */
+    public function changeEmail(array $request): string
+    {
+        $user = $request['user'] ?? null;
+        $userIdFromRoute = $request['id'] ?? null;
+
+        if (!$user instanceof User) {
+            return $this->jsonResponse(['error' => 'User not authenticated'], 401);
+        }
+
+        // Authorization: Ensure the authenticated user is changing their own email.
+        if ($user->id !== $userIdFromRoute) {
+            return $this->jsonResponse(['error' => 'Forbidden. You can only change your own email.'], 403);
+        }
+
+        $jsonInput = file_get_contents('php://input');
+        $data = json_decode($jsonInput, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->jsonResponse(['error' => 'Invalid JSON provided'], 400);
+        }
+
+        $newEmail = $data['new_email'] ?? null;
+
+        if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+            return $this->jsonResponse(['error' => 'A valid new email address is required.'], 400);
+        }
+
+        try {
+            $updatedUser = $this->authService->changeEmailAndRequestVerification($user, $newEmail);
+            return $this->jsonResponse(['success' => true, 'message' => 'Email change initiated. Please verify your new email address.', 'user' => ['id' => $updatedUser->id, 'email' => $updatedUser->email, 'is_verified' => (bool)$updatedUser->is_verified]]);
+        } catch (\Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
     }
 }

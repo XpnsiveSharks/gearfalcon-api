@@ -4,7 +4,6 @@ namespace App\Application\Services\Customer;
 
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\Customer;
-use App\Infrastructure\Models\CustomerAddress;
 use Illuminate\Database\Capsule\Manager as DB;
 
 class CustomerProfileService
@@ -50,6 +49,85 @@ class CustomerProfileService
 
             return $customer;
         });
+    }
+
+    /**
+     * Changes the password for a given user.
+     *
+     * @param User $user The authenticated user object.
+     * @param array $data The request data containing old and new passwords.
+     * @param bool $isAdmin Flag indicating if the requesting user is an admin.
+     * @return bool True on success.
+     * @throws \Exception If passwords do not match or are invalid.
+     */
+    public function changePassword(User $user, array $data, bool $isAdmin = false): bool
+    {
+        // Validate required fields
+        if (!$isAdmin && empty($data['old_password'])) {
+            throw new \InvalidArgumentException('Old password is required.');
+        }
+        if (empty($data['new_password']) || empty($data['new_password_confirmation'])) {
+            throw new \InvalidArgumentException('Old password, new password, and confirmation are required.');
+        }
+
+        // Verify old password, but skip this check if an admin is making the change
+        if (!$isAdmin && !password_verify($data['old_password'], $user->password)) {
+            throw new \Exception('The old password does not match our records.');
+        }
+
+        // Verify new password confirmation
+        if ($data['new_password'] !== $data['new_password_confirmation']) {
+            throw new \Exception('The new password confirmation does not match.');
+        }
+
+        // Update the user's password
+        $user->password = password_hash($data['new_password'], PASSWORD_BCRYPT);
+        
+        return $user->save();
+    }
+
+    /**
+     * Updates a customer's address.
+     *
+     * @param User $user The authenticated user object.
+     * @param int $addressId The ID of the address to update.
+     * @param array $data The new address data.
+     * @return \App\Infrastructure\Models\CustomerAddress The updated address object.
+     * @throws \Exception If customer profile or address does not exist, or if data is invalid.
+     */
+    public function changeAddress(User $user, int $addressId, array $data): \App\Infrastructure\Models\CustomerAddress
+    {
+        $customer = $user->customer;
+        if (!$customer) {
+            throw new \Exception('Customer profile not found for this user.');
+        }
+
+        $address = $customer->addresses()->find($addressId);
+        if (!$address) {
+            throw new \Exception('Address not found or does not belong to this customer.', 404);
+        }
+
+        // Define which fields are allowed to be updated.
+        $allowedFields = [
+            'house_number',
+            'street',
+            'barangay',
+            'city',
+            'province',
+            'region',
+            'postal_code',
+            'is_primary'
+        ];
+
+        // Filter the incoming data to only include allowed fields.
+        $updateData = array_intersect_key($data, array_flip($allowedFields));
+
+        if (empty($updateData)) {
+            throw new \InvalidArgumentException('No valid address fields provided for update.');
+        }
+
+        $address->update($updateData);
+        return $address;
     }
 
     private function validateInput(array $data): void

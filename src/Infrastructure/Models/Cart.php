@@ -11,7 +11,7 @@ class Cart extends Model
     protected $table = 'carts';
 
     protected $fillable = [
-        'customer_id', 'status'
+        'customer_id', 'status', 'payment_source_id'
     ];
 
     public function customer()

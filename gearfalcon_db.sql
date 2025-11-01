@@ -116,6 +116,7 @@ CREATE TABLE services (
 CREATE TABLE carts (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   customer_id BIGINT, -- FK → customers.id
+  payment_source_id VARCHAR(255) NULL, -- To store the PayMongo source ID
   status ENUM('active','checked_out','abandoned') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

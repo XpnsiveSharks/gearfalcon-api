@@ -2,6 +2,7 @@
 
 namespace App\Presentation\Controllers;
 
+use App\Application\Customer\Services\CartService;
 use Illuminate\Support\Carbon;
 use App\Application\Customer\Services\JobService;
 use App\Infrastructure\Models\User;
@@ -10,10 +11,12 @@ use Exception;
 class JobController
 {
     private JobService $jobService;
+    private CartService $cartService;
 
-    public function __construct(JobService $jobService)
+    public function __construct(JobService $jobService, CartService $cartService)
     {
         $this->jobService = $jobService;
+        $this->cartService = $cartService;
     }
 
     private function jsonResponse(array $data, int $statusCode = 200): string
@@ -39,56 +42,92 @@ class JobController
             return $this->jsonResponse(['error' => 'Invalid JSON provided'], 400);
         }
 
-        // Validate required fields
-        if (empty($data['customer_address_id']) || empty($data['service_id'])) {
-            return $this->jsonResponse(['error' => 'Missing required fields: customer_address_id and service_id'], 400);
-        }
+        $cartId = $data['cart_id'] ?? null;
 
-        $isPriority = $data['is_priority'] ?? false;
+        // If a cart_id is provided, process the entire cart.
+        if ($cartId) {
+            try {
+                $cartItems = $this->cartService->getItemsByCartId((int)$cartId);
+                if ($cartItems->isEmpty()) {
+                    return $this->jsonResponse(['error' => 'Cart is empty or not found.'], 404);
+                }
 
-        // Build the job data array from the request
-        $jobData = [
-            'customer_address_id' => $data['customer_address_id'],
-            'service_id' => $data['service_id'],
-            'cart_id' => $data['cart_id'] ?? null,
-            'notes' => $data['notes'] ?? null,
-            'scheduled_date' => $data['scheduled_date'] ?? Carbon::now()->toDateString(),
-            'is_priority' => $isPriority,
-        ];
+                $jobsCreated = 0;
+                foreach ($cartItems as $item) {
+                    for ($i = 0; $i < $item->quantity; $i++) {
+                        $jobData = [
+                            'customer_id'         => $user->customer->id,
+                            'customer_address_id' => $data['customer_address_id'],
+                            'service_id'          => $item->service_id,
+                            'cart_id'             => $cartId,
+                            'status'              => 'available_for_claim',
+                            'notes'               => $item->notes,
+                            'is_priority'         => false,
+                            'scheduled_date'      => $data['scheduled_date'] ?? Carbon::now()->toDateString(),
+                        ];
+                        $this->jobService->createJob($jobData);
+                        $jobsCreated++;
+                    }
+                }
 
-        // Set customer_id from the authenticated user
-        $jobData['customer_id'] = $user->customer->id;
-        // Set status based on priority flag, according to schema
-        $jobData['status'] = $isPriority ? 'pending_admin_assignment' : 'available_for_claim';
+                $this->cartService->changeStatus((int)$cartId, 'checked_out');
 
-        try {
-            $job = $this->jobService->createJob($jobData);
-            return $this->jsonResponse([
-                'success' => true,
-                'message' => 'Job created successfully.',
-                'job' => $job->toArray()
-            ], 201);
-        } catch (Exception $e) {
-            return $this->jsonResponse(['error' => $e->getMessage()], 400);
-        }
-    }
-
-    public function getJobDetails(array $request): string
-    {
-        $id = $request['id'] ?? null;
-
-        if (!$id) {
-            return $this->jsonResponse(['error' => 'Job ID is missing from the request'], 400);
-        }
-
-        try {
-            $job = $this->jobService->getJobWithDetails($id);
-
-            if (!$job) {
-                return $this->jsonResponse(['error' => 'Job not found'], 404);
+                return $this->jsonResponse([
+                    'success' => true,
+                    'message' => "{$jobsCreated} jobs created successfully from cart.",
+                ], 201);
+            } catch (Exception $e) {
+                return $this->jsonResponse(['error' => 'Failed to create jobs from cart: ' . $e->getMessage()], 400);
+            }
+        } else {
+            // Original logic for creating a single job.
+            if (empty($data['customer_address_id']) || empty($data['service_id'])) {
+                return $this->jsonResponse(['error' => 'Missing required fields: customer_address_id and service_id'], 400);
             }
 
-            return $this->jsonResponse(['job' => $job->toArray()]);
+            $isPriority = $data['is_priority'] ?? false;
+
+            $jobData = [
+                'customer_address_id' => $data['customer_address_id'],
+                'service_id' => $data['service_id'],
+                'cart_id' => null,
+                'notes' => $data['notes'] ?? null,
+                'scheduled_date' => $data['scheduled_date'] ?? Carbon::now()->toDateString(),
+                'is_priority' => $isPriority,
+                'customer_id' => $user->customer->id,
+                'status' => $isPriority ? 'pending_admin_assignment' : 'available_for_claim',
+            ];
+
+            try {
+                $job = $this->jobService->createJob($jobData);
+                return $this->jsonResponse([
+                    'success' => true,
+                    'message' => 'Job created successfully.',
+                    'job' => $job->toArray()
+                ], 201);
+            } catch (Exception $e) {
+                return $this->jsonResponse(['error' => $e->getMessage()], 400);
+            }
+        }
+
+    }
+
+    public function getJobsByCustomer(array $request): string
+    {
+        $customerId = $request['id'] ?? null;
+
+        if (!$customerId) {
+            return $this->jsonResponse(['error' => 'Customer ID is missing from the request'], 400);
+        }
+
+        try {
+            $jobs = $this->jobService->getJobsByCustomerId((int)$customerId);
+
+            if ($jobs->isEmpty()) {
+                return $this->jsonResponse(['jobs' => []]);
+            }
+
+            return $this->jsonResponse(['jobs' => $jobs->toArray()]);
         } catch (Exception $e) {
             return $this->jsonResponse(['error' => $e->getMessage()], 500);
         }
@@ -276,6 +315,38 @@ class JobController
         } catch (Exception $e) {
             // Handle potential errors
             return $this->jsonResponse(['error' => 'Could not retrieve taken jobs: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getTechnicianForJob(array $request): string
+    {
+        $jobId = $request['id'] ?? null;
+
+        if (!$jobId) {
+            return $this->jsonResponse(['error' => 'Job ID is missing from the request'], 400);
+        }
+
+        try {
+            $assignment = $this->jobService->getTechnicianForJob((int)$jobId);
+
+            if (!$assignment || !$assignment->technician) {
+                return $this->jsonResponse(['error' => 'No technician assigned to this job'], 404);
+            }
+
+            $technician = $assignment->technician;
+            $user = $technician->user;
+
+            return $this->jsonResponse([
+                'technician' => [
+                    'id' => $technician->id,
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                ]
+            ]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve technician for the job: ' . $e->getMessage()], 500);
         }
     }
 }

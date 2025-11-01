@@ -5,6 +5,7 @@ use App\Presentation\Controllers\AuthController;
 use App\Presentation\Controllers\Customer\QuoteController;
 use App\Presentation\Controllers\Customer\CustomerController;
 use App\Presentation\Controllers\JobController;
+use App\Presentation\Controllers\PaymentController;
 use App\Presentation\Controllers\Customer\CartController;
 use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Admin\AdminController;
@@ -15,7 +16,7 @@ return function(RouteCollector $r) {
     $r->addRoute('GET', '/', function() {
         echo "Welcome to GearFalcon API 🚀";
     });
-
+    
     // Health check route
     $r->addRoute('GET', '/health', function() {
         header('Content-Type: application/json');
@@ -26,7 +27,7 @@ return function(RouteCollector $r) {
             'environment' => getenv('APP_ENV') ?: 'development'
         ]);
     });
-
+    
     // Auth routes
     $r->addGroup('/auth', function (RouteCollector $r) {
         $r->addRoute('POST', '/login', [AuthController::class, 'login']);
@@ -39,6 +40,10 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/forgot-password', [AuthController::class, 'forgotPassword']); // TODO
     });
     
+    $r->addGroup('/webhooks', function (RouteCollector $r) {
+        $r->addRoute('POST', '/paymongo', [PaymentController::class, 'handleWebhook']);
+    });
+    
     // Quote routes  
     $r->addGroup('/quotes', function (RouteCollector $r) {
         $r->addRoute('POST', '', [QuoteController::class, 'create']);                 // create a quote
@@ -46,35 +51,39 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/{id:\d+}/reject', [QuoteController::class, 'reject']); // reject a quote
         $r->addRoute('GET', '/active', [QuoteController::class, 'getActive']);        // list all active quotes
     });
-
     // Customer quotes
     $r->addRoute('GET', '/customers/{id:\d+}/quotes', [QuoteController::class, 'getByCustomer']);
-
+    
+    
+    
     // Customer profile routes
     $r->addGroup('/customers', function (RouteCollector $r) {
         // Complete customer profile
         $r->addRoute('POST', '/complete-profile', [CustomerController::class, 'completeProfile']);
-        $r->addRoute('POST', '/change-password', [CustomerController::class, 'changePassword']);// change password TODOOOOOO
-
-
+        $r->addRoute('PUT', '/change-password/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [CustomerController::class, 'changePassword']);
+        $r->addRoute('PUT', '/change-address/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [CustomerController::class, 'changeAddress']); 
+        $r->addRoute('PUT', '/change-email/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AuthController::class, 'changeEmail']); 
+        
         //Cart Items
         $r->addGroup('/cart', function (RouteCollector $r) {
             $r->addRoute('GET', '', [CartController::class, 'getCartItems']);
+            $r->addRoute('GET', 'getItemsByCartId', [CartController::class, 'getCartItems']);
             $r->addRoute('POST', '/items', [CartController::class, 'addToCart']);
             $r->addRoute('DELETE', '/items/{id:\d+}', [CartController::class, 'removeFromCart']);
             $r->addRoute('PUT', '/items/{id:\d+}', [CartController::class, 'updateCartItem']);
             $r->addRoute('DELETE', '', [CartController::class, 'clearCart']);
+            $r->addRoute('PUSH', '', [CartController::class, 'clearCart']); 
+            $r->addRoute('POST', '/checkout', [PaymentController::class, 'createPaymentSource']);
         });
-
+        
         //Cart Status
-        $r->addRoute('PUT', '/carts',[CartController::class, 'changeStatus']);
-
+        $r->addRoute('PUT', '/carts',[CartController::class, 'changeStatus']); // eto need ko gawin sa admin
         
         //Customer Jobs
         $r->addGroup('/jobs', function (RouteCollector $r) {
             $r->addRoute('POST', '', [JobController::class, 'createJob']); // create a job
-            $r->addRoute('GET', '/{id:\d+}', [JobController::class, 'getJobDetails']); // get job details
-            $r->addRoute('PUT', '/{id:\d+}/cancel', [JobController::class, 'cancelJob']); // cancel a job
+            $r->addRoute('GET', '/{id:\d+}', [JobController::class, 'getJobsByCustomer']); // get jobs by customer
+            $r->addRoute('GET', '/{id:\d+}/technician', [JobController::class, 'getTechnicianForJob']); // get technician for a job
             $r->addRoute('PUT', '/{id:\d+}/complete', [JobController::class, 'completeJob']); // Mark job as completed by customer
         });
     });
@@ -97,8 +106,11 @@ return function(RouteCollector $r) {
 
     // Admin routes
     $r->addGroup('/admin', function (RouteCollector $r) {
+        // Customer routes
         $r->addRoute('GET', '/customers', [AdminController::class, 'listCustomers']);
         $r->addRoute('GET', '/customers/address', [AdminController::class, 'listCustomerAddresses']);
+        $r->addRoute('GET', '/customers/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'getCustomerDetails']);
+
 
         // Technician routes
         $r->addRoute('POST', '/technicians/promote', [UserController::class, 'promote']);
@@ -138,7 +150,7 @@ return function(RouteCollector $r) {
             $r->addRoute('GET', '/available', [JobController::class, 'getAvailableJobs']); // New route for available jobs
             $r->addRoute('GET', '/emergency', [JobController::class, 'getEmergencyJobs']); // list emergency jobs
             $r->addRoute('GET', '/taken', [JobController::class, 'TakenJobs']); // New route for available jobs
-            $r->addRoute('POST', '/{id:\d+}/assign', [JobController::class, 'assignJob']); // assign job to technician
+            $r->addRoute('POST', '/{id:\d+}/assign', [JobController::class, 'assignJob']); // assign job to technician  .. TODO
         });
     });
 };

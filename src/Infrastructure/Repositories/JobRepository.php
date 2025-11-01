@@ -15,7 +15,9 @@ class JobRepository extends Repository
      */
     public function findByCustomerId(int $customerId)
     {
-        return $this->model->where('customer_id', $customerId)->get();
+        return $this->model->where('customer_id', $customerId)
+            ->with('service') // Eager-load the service relationship
+            ->get();
     }
 
     /**

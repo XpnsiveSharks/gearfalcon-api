@@ -25,7 +25,8 @@ class HttpKernel
     {
         $request = [
             'server' => $_SERVER,
-            'headers' => getallheaders()
+            'headers' => getallheaders(),
+            'raw_body' => file_get_contents('php://input') // Read the raw body once
         ];
         //===================CorsMiddleware=====================//
         // This runs the CorsMiddleware: it adds CORS headers. 
@@ -83,8 +84,11 @@ class HttpKernel
                         // Use the $processedRequest which now contains the 'user' object from the middleware.
                         $args = $processedRequest + $vars;
 
-                        if (in_array($httpMethod, ['POST', 'PUT', 'PATCH'])) {
-                            $input = json_decode(file_get_contents('php://input'), true) ?? [];
+                        // For all POST/PUT/PATCH requests EXCEPT the webhook, decode the JSON body.
+                        if (in_array($httpMethod, ['POST', 'PUT', 'PATCH']) && $uri !== '/webhooks/paymongo') {
+                            // Use the raw_body we captured earlier.
+                            // For other requests, we decode it.
+                            $input = json_decode($processedRequest['raw_body'], true) ?? [];
                             $args = array_merge($args, $input);
                         }
 
@@ -101,4 +105,5 @@ class HttpKernel
         http_response_code(500);
         echo json_encode(['error' => 'Kernel misconfiguration: No middleware chain was executed.']);
     }
+
 }

@@ -45,6 +45,20 @@ class JobAssignmentRepository extends Repository
     }
 
     /**
+     * Find the technician assigned to a specific job.
+     *
+     * @param int $jobId
+     * @return JobAssignment|null
+     */
+    public function findTechnicianByJobId(int $jobId): ?JobAssignment
+    {
+        return $this->model
+            ->where('job_id', $jobId)
+            ->with('technician.user') // Eager-load technician and their user details
+            ->first();
+    }
+
+    /**
      * Find assignment with job and technician details.
      *
      * @param int $id

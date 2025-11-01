@@ -1,7 +1,6 @@
 <?php
 namespace App\Presentation\Controllers\Admin;
 
-use App\Application\Admin\Services\AdminService;
 use App\Application\Admin\Services\PromotionService;
 use App\Application\Admin\Services\ServiceCategoryService;
 use App\Application\Admin\Services\ServiceService;
@@ -151,6 +150,36 @@ class AdminController
         } catch (Exception $e) {
             // Handle potential errors
             return $this->jsonResponse(['error' => 'Could not retrieve customers: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getCustomerDetails(array $request): string
+    {
+        $user = $request['user'] ?? null;
+        $customerUserId = $request['id'] ?? null;
+
+        // 1. Ensure the user is an authenticated admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        if (!$customerUserId) {
+            return $this->jsonResponse(['error' => 'Customer user ID is missing'], 400);
+        }
+
+        try {
+            // 2. Call the repository to get customer details by user ID
+            $customer = $this->customerRepository->findWithUserDetailsByUserId($customerUserId);
+
+            if (!$customer) {
+                return $this->jsonResponse(['error' => 'Customer not found'], 404);
+            }
+
+            // 3. Return the customer details
+            return $this->jsonResponse(['customer' => $customer->toArray()]);
+        } catch (Exception $e) {
+            // Handle potential errors
+            return $this->jsonResponse(['error' => 'Could not retrieve customer details: ' . $e->getMessage()], 500);
         }
     }
 

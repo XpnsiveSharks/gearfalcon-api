@@ -53,6 +53,17 @@ class CustomerRepository extends Repository
     {
         return $this->model->with('user')->get();
     }
+
+    /**
+     * Find a customer by user ID with full details including user and addresses.
+     *
+     * @param string $userId
+     * @return Customer|null
+     */
+    public function findWithUserDetailsByUserId(string $userId): ?Customer
+    {
+        return $this->model->where('user_id', $userId)->with(['user', 'addresses'])->first();
+    }
 }
 
 // // Customer.php
