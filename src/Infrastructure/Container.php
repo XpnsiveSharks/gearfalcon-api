@@ -10,7 +10,7 @@ use App\Infrastructure\Models\Cart;
 use App\Infrastructure\Models\CartItem;
 use App\Infrastructure\Models\CustomerAddress;
 use App\Infrastructure\Models\Customer;
-use App\Infrastructure\Models\Quote;
+
 use App\Infrastructure\Models\Job;
 use App\Infrastructure\Models\Technician;
 use App\Infrastructure\Models\JobAssignment; // Added for JobAssignmentRepository
@@ -24,7 +24,7 @@ use App\Infrastructure\Repositories\CustomerRepository;
 use App\Infrastructure\Repositories\CustomerAddressRepository;
 use App\Infrastructure\Repositories\CartRepository;
 use App\Infrastructure\Repositories\CartItemRepository;
-use App\Infrastructure\Repositories\QuoteRepository;
+
 use App\Infrastructure\Repositories\JobRepository;
 use App\Infrastructure\Repositories\TechnicianRepository;
 use App\Infrastructure\Repositories\JobAssignmentRepository; // Added for JobService
@@ -39,7 +39,7 @@ use App\Application\Customer\Services\CustomerRegistrationService;
 use App\Application\Services\AuthService;
 use App\Application\Customer\Services\JobService; // Added for JobController and QuoteService
 use App\Application\Customer\Services\CartService;
-use App\Application\Services\QuoteService;
+
 use App\Application\Services\ServiceCatalogService;
 use App\Application\Admin\Services\PromotionService;
 use App\Application\Services\EmailVerificationService;
@@ -55,7 +55,7 @@ use App\Application\Customer\Services\RefundService;
 use App\Presentation\Controllers\AuthController;
 use App\Presentation\Controllers\Customer\CartController;
 use App\Presentation\Controllers\JobController; // Added for JobController
-use App\Presentation\Controllers\Customer\QuoteController;
+
 use App\Presentation\Controllers\Admin\AdminController;
 use App\Presentation\Controllers\Admin\UserController;
 use App\Presentation\Controllers\Technician\TechnicianController;
@@ -91,7 +91,7 @@ $customerRepository = new CustomerRepository(new Customer);
 $customerAddressRepository = new CustomerAddressRepository(new CustomerAddress);
 $cartRepository = new CartRepository(new Cart);
 $cartItemRepository = new CartItemRepository(new CartItem);
-$quoteRepository = new QuoteRepository(new Quote);
+
 $jobRepository = new JobRepository(new Job);
 $jobAssignmentRepository = new JobAssignmentRepository(new JobAssignment); // Initialized JobAssignmentRepository
 $technicianRepository = new TechnicianRepository(new Technician);
@@ -118,7 +118,7 @@ $customerRegistrationService = new CustomerRegistrationService($userRegistration
 $authService = new AuthService($userRepository, new EmailVerificationService($userRepository));
 $jobService = new JobService($jobRepository, $jobAssignmentRepository); // Initialized JobService
 $cartService = new CartService($cartRepository, $cartItemRepository, $serviceRepository);
-$quoteService = new QuoteService($quoteRepository, $jobRepository, $jobService); // Corrected QuoteService instantiation
+
 $promotionService = new PromotionService($userRepository, $technicianRepository);
 $emailVerificationService = new EmailVerificationService($userRepository);
 $serviceCategoryService = new ServiceCategoryService($serviceCategoryRepository);
@@ -136,7 +136,7 @@ $authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
 // Controllers
 $authController = new AuthController($authService, $userRegistrationService, $emailVerificationService);
 $cartController = new CartController($cartService);
-$quoteController = new QuoteController($quoteService);
+
 $jobController = new JobController($jobService, $cartService);
 $adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService, $customerRepository, $customerAddressRepository, $technicianService, $customerProfileService, $authService, $userRepository);
 $catalogController = new CatalogController($serviceCatalogService);
@@ -159,7 +159,7 @@ $container = [
   AuthMiddleware::class => $authMiddleware,
   AuthController::class => $authController,
   CartController::class => $cartController,
-  QuoteController::class => $quoteController,
+  
   JobController::class => $jobController, // Added JobController to the container
   AdminController::class => $adminController,
   UserController::class => $userController,

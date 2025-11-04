@@ -109,7 +109,6 @@ class JobController
                 return $this->jsonResponse(['error' => $e->getMessage()], 400);
             }
         }
-
     }
 
     public function getJobsByCustomer(array $request): string
@@ -224,7 +223,7 @@ class JobController
         if (!$jobId) {
             return $this->jsonResponse(['error' => 'Job ID is missing from the request'], 400);
         }
-        
+
         $customerId = $user->customer->id;
 
         try {
@@ -405,7 +404,8 @@ class JobController
         }
 
         // 3. Get technician ID from URL
-        $technicianId = $request['technician_id'] ?? null;        if (!$technicianId) {
+        $technicianId = $request['technician_id'] ?? null;
+        if (!$technicianId) {
             return $this->jsonResponse(['error' => 'Technician ID is required in the request body'], 400);
         }
 
@@ -492,6 +492,148 @@ class JobController
             return $this->jsonResponse(['jobs' => $refundedJobs->toArray()]);
         } catch (Exception $e) {
             return $this->jsonResponse(['error' => 'Could not retrieve refunded jobs: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function rateJob(array $request): string
+    {
+        $user = $request['user'] ?? null;
+        $jobId = $request['job'] ?? null;
+
+        if (!$user instanceof User || $user->role !== 'customer' || !$user->customer) {
+            return $this->jsonResponse(['error' => 'User not authenticated or not a customer'], 401);
+        }
+
+        if (!$jobId) {
+            return $this->jsonResponse(['error' => 'Job ID is missing from the request'], 400);
+        }
+
+        $jsonInput = file_get_contents('php://input');
+        $data = json_decode($jsonInput, true);
+        $rating = $data['rating'] ?? null;
+
+        if ($rating === null) {
+            return $this->jsonResponse(['error' => 'Rating is missing from the request body'], 400);
+        }
+
+        if (!is_numeric($rating) || $rating < 1 || $rating > 10) {
+            return $this->jsonResponse(['error' => 'Rating must be a number between 1 and 10'], 400);
+        }
+
+        try {
+            $job = $this->jobService->rateJob((int)$jobId, (int)$rating, $user->customer->id);
+
+            return $this->jsonResponse([
+                'success' => true,
+                'message' => 'Job rated successfully.',
+                'job' => $job->toArray()
+            ]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function technicianReview(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User || $user->role !== 'technician' || !$user->technician) {
+            return $this->jsonResponse(['error' => 'User not authenticated or not a technician'], 401);
+        }
+
+        $technicianId = $user->technician->id;
+
+        try {
+            $averageReview = $this->jobService->getTechnicianAverageReview($technicianId);
+
+            return $this->jsonResponse(['average_review' => $averageReview]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve technician review: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function activeBooking(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            $activeBookingCount = $this->jobService->getActiveBookingCount();
+
+            return $this->jsonResponse(['active_booking_count' => $activeBookingCount]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve active booking count: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function review(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            $averageReview = $this->jobService->getAverageJobReview();
+
+            return $this->jsonResponse(['average_job_review' => $averageReview]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve average job review: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function totalRevenue(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            $totalRevenue = $this->jobService->getTotalRevenue();
+
+            return $this->jsonResponse(['total_revenue' => $totalRevenue]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve total revenue: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function recentBookings(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            $recentJobs = $this->jobService->getRecentJobs(50); // Limit to 50 recent jobs
+
+            return $this->jsonResponse(['recent_jobs' => $recentJobs->toArray()]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve recent bookings: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function bookings(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            $totalJobCount = $this->jobService->getTotalJobCount();
+
+            return $this->jsonResponse(['total_job_count' => $totalJobCount]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve total job count: ' . $e->getMessage()], 500);
         }
     }
 }

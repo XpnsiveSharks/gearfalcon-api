@@ -352,4 +352,68 @@ class JobService
             return $this->jobRepository->update($jobId, ['status' => 'refunded']);
         });
     }
+
+    public function rateJob(int $jobId, int $rating, int $customerId)
+    {
+        return DB::connection()->transaction(function () use ($jobId, $rating, $customerId) {
+            $job = $this->jobRepository->findById($jobId);
+
+            if (!$job) {
+                throw new Exception("Job not found.");
+            }
+
+            if ($job->customer_id !== $customerId) {
+                throw new Exception("You are not authorized to rate this job.");
+            }
+
+            if ($job->status !== 'completed') {
+                throw new Exception("You can only rate completed jobs.");
+            }
+
+            if ($job->review !== null) {
+                throw new Exception("This job has already been rated.");
+            }
+
+            $this->jobRepository->update($jobId, ['review' => $rating]);
+
+            return $this->jobRepository->findById($jobId);
+        });
+    }
+
+    public function getTechnicianAverageReview(int $technicianId): ?float
+    {
+        return $this->jobRepository->getAverageReviewByTechnicianId($technicianId);
+    }
+
+    public function getActiveBookingCount(): int
+    {
+        return $this->jobRepository->countByStatus('claimed');
+    }
+
+    public function getAverageJobReview(): ?float
+    {
+        return $this->jobRepository->getAverageReview();
+    }
+
+    public function getTotalRevenue(): float
+    {
+        $completedJobs = $this->jobRepository->getCompletedJobsWithServices();
+        $totalRevenue = 0;
+        foreach ($completedJobs as $job) {
+            if ($job->service && $job->service->base_price) {
+                $totalRevenue += $job->service->base_price;
+            }
+        }
+        return $totalRevenue;
+    }
+
+    public function getRecentJobs(int $limit = 50)
+    {
+        return $this->jobRepository->findRecent($limit);
+    }
+
+    public function getTotalJobCount(): int
+    {
+        return $this->jobRepository->countAll();
+    }
 }

@@ -120,4 +120,50 @@ class JobRepository extends Repository
             ])
             ->get();
     }
+
+    public function getAverageReviewByTechnicianId(int $technicianId): ?float
+    {
+        return $this->model
+            ->whereHas('assignments', function ($query) use ($technicianId) {
+                $query->where('technician_id', $technicianId)->withTrashed();
+            })
+            ->where('status', 'completed')
+            ->whereNotNull('review')
+            ->avg('review');
+    }
+
+    public function countByStatus(string $status): int
+    {
+        return $this->model->where('status', $status)->count();
+    }
+
+    public function getAverageReview(): ?float
+    {
+        return $this->model
+            ->where('status', 'completed')
+            ->whereNotNull('review')
+            ->avg('review');
+    }
+
+    public function getCompletedJobsWithServices()
+    {
+        return $this->model
+            ->where('status', 'completed')
+            ->with('service')
+            ->get();
+    }
+
+    public function findRecent(int $limit = 50)
+    {
+        return $this->model
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->with(['customer.user', 'service', 'customerAddress', 'assignments.technician.user'])
+            ->get();
+    }
+
+    public function countAll(): int
+    {
+        return $this->model->count();
+    }
 }

@@ -2,7 +2,7 @@
 
 use App\Presentation\Controllers\Technician\TechnicianController;
 use App\Presentation\Controllers\AuthController;
-use App\Presentation\Controllers\Customer\QuoteController;
+
 use App\Presentation\Controllers\Customer\CustomerController;
 use App\Presentation\Controllers\JobController;
 use App\Presentation\Controllers\PaymentController;
@@ -48,10 +48,7 @@ return function(RouteCollector $r) {
     });
     
    
-    // Customer quotes
-    $r->addRoute('GET', '/customers/{id:\d+}/quotes', [QuoteController::class, 'getByCustomer']);
-    
-    
+
     
     // Customer profile routes
     $r->addGroup('/customers', function (RouteCollector $r) {
@@ -80,6 +77,7 @@ return function(RouteCollector $r) {
             $r->addRoute('GET', '/{id:\d+}/technician', [JobController::class, 'getTechnicianForJob']); // get technician for a job
             $r->addRoute('PUT', '/{id:\d+}/cancel', [JobController::class, 'cancelJob']);
             $r->addRoute('PUT', '/{id:\d+}/complete', [JobController::class, 'completeJob']); // Mark job as completed by customer
+            $r->addRoute('PUT', '/{job:\d+}/rate', [JobController::class, 'rateJob']);
         });
     });
 
@@ -96,6 +94,7 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/jobs/{id:\d+}/claim', [JobController::class, 'claimJob']);
         $r->addRoute('GET', '/jobs/assigned', [JobController::class, 'assignedJobs']); // New route for assigned jobs
         $r->addRoute('GET', '/jobs/service-history', [JobController::class, 'serviceHistory']);
+        $r->addRoute('GET','/review', [JobController::class, 'technicianReview']); // gives the avg rating of the technician.
     });
 
 
@@ -110,13 +109,7 @@ return function(RouteCollector $r) {
         $r->addRoute('PUT', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'updateUser']);
         });
 
-         // Quote routes  
-        $r->addGroup('/quotes', function (RouteCollector $r) {
-            $r->addRoute('POST', '', [QuoteController::class, 'create']);                 // create a quote
-            $r->addRoute('POST', '/{id:\d+}/accept', [QuoteController::class, 'accept']); // accept a quote
-            $r->addRoute('POST', '/{id:\d+}/reject', [QuoteController::class, 'reject']); // reject a quote
-            $r->addRoute('GET', '/active', [QuoteController::class, 'getActive']);        // list all active quotes
-        });
+       
 
         $r->addGroup('/customers', function (RouteCollector $r){
             $r->addRoute('GET', '', [AdminController::class, 'listCustomers']);
@@ -171,6 +164,19 @@ return function(RouteCollector $r) {
             $r->addRoute('GET', '/refunded', [JobController::class, 'getRefunded']); // Get all refunded jobs
             $r->addRoute('POST', '/refund', [JobController::class, 'refund']);
             $r->addRoute('PUT', '/{job_id:\d+}/unassign', [JobController::class, 'unassignJob']); // unassign job from technician
+        });
+        
+        $r->addGroup('/overviews', function (RouteCollector $r) {
+            $r->addRoute('GET','/review', [JobController::class, 'review']);// get jobs for review
+            $r->addRoute('GET', '/booking', [JobController::class, 'bookings']); // gets the sum of all the jobs
+            $r->addRoute('GET', '/active_booking', [JobController::class, 'activeBooking']); // gets the number of jobs that are claimed
+            $r->addRoute('GET', '/revenue', [JobController::class, 'totalRevenue']); // gets the total revenue by going getting it from the services using the service_id
+            $r->addRoute('GET', '/recents', [JobController::class, 'recentBookings']); // gets the recent bookings by sorting the bookings to the recents created_at
+        });
+
+        $r->addGroup('/reports', function (RouteCollector $r) {
+            
+        
         });
     });
 };

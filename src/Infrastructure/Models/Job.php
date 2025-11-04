@@ -29,6 +29,7 @@ class Job extends Model
         'scheduled_date',
         'completed_date',
         'notes',
+        'review',
         'job_board_expiry_at',
         'is_priority',
     ];
