@@ -81,4 +81,50 @@ class AuthService
         // Return the updated user.
         return $user;
     }
+
+    public function forgotPassword(string $email): void
+    {
+        $user = $this->userRepository->findByEmail($email);
+        if ($user) {
+            $this->verificationService->sendPasswordResetCode($email);
+        }
+    }
+
+    public function verifyPasswordReset(string $email, string $code): bool
+    {
+        return $this->verificationService->verifyPasswordResetCode($email, $code);
+    }
+
+    public function resetPassword(string $email, string $code, string $password): void
+    {
+        if ($this->verifyPasswordReset($email, $code)) {
+            $user = $this->userRepository->findByEmail($email);
+            if ($user) {
+                $this->userRepository->update($user->id, [
+                    'password' => password_hash($password, PASSWORD_DEFAULT),
+                    'password_reset_code' => null,
+                    'password_reset_code_expires_at' => null,
+                    'password_reset_verified' => 0
+                ]);
+            }
+        }
+    }
+
+    public function updateProfile(User $user, array $data): User
+    {
+        $updateData = [];
+        if (isset($data['name'])) {
+            $updateData['name'] = $data['name'];
+        }
+        if (isset($data['phone'])) {
+            $updateData['phone'] = $data['phone'];
+        }
+
+        if (!empty($updateData)) {
+            $this->userRepository->update($user->id, $updateData);
+            $user->refresh();
+        }
+
+        return $user;
+    }
 }

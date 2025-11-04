@@ -240,5 +240,135 @@ class EmailVerificationService
             </div>
         </div>";
     }
+
+    public function sendPasswordResetCode(string $email): void
+    {
+        $user = $this->userRepository->findByEmail($email);
+        if (!$user) {
+            throw new \Exception("User not found for email: $email");
+        }
+
+        $code = $this->generatePasswordResetCode();
+        
+        $this->userRepository->update($user->id, [
+            'password_reset_code' => $code,
+            'password_reset_code_expires_at' => date('Y-m-d H:i:s', strtotime('+15 minutes'))
+        ]);
+
+        $this->sendPasswordResetEmail($email, (string)$code);
+    }
+
+    public function verifyPasswordResetCode(string $email, string $code): bool
+    {
+        $user = $this->userRepository->findByEmail($email);
+        
+        if (!$user) {
+            throw new \Exception("User not found");
+        }
+
+        $inputCode = trim($code);
+        if (empty($inputCode) || !ctype_digit($inputCode) || strlen($inputCode) !== 6) {
+            return false;
+        }
+
+        $storedCode = (string)$user->password_reset_code;
+        
+        if (empty($storedCode) || $storedCode !== $inputCode) {
+            return false;
+        }
+
+        if (strtotime($user->password_reset_code_expires_at) < time()) {
+            throw new \Exception("Password reset code has expired");
+        }
+
+        $this->userRepository->update($user->id, [
+            'password_reset_verified' => true
+        ]);
+
+        return true;
+    }
+
+    private function generatePasswordResetCode(): int
+    {
+        return random_int(100000, 999999);
+    }
+
+    private function sendPasswordResetEmail(string $toEmail, string $code): void
+    {
+        try {
+            $smtpHost = $this->getEnvVar('SMTP_HOST');
+            $smtpUser = $this->getEnvVar('SMTP_USERNAME');
+            $smtpPass = $this->getEnvVar('SMTP_PASSWORD');
+
+            if (empty($smtpHost) || empty($smtpUser) || empty($smtpPass)) {
+                if (getenv('APP_ENV') === 'development') {
+                    error_log("DEVELOPMENT MODE: Skipping password reset email for {$toEmail}. Code: {$code}");
+                    return;
+                } else {
+                    throw new \Exception("SMTP configuration is required in production environment");
+                }
+            }
+
+            $mail = new PHPMailer(true);
+
+            $mail->isSMTP();
+            $mail->Host = $smtpHost;
+            $mail->SMTPAuth = true;
+            $mail->Username = $smtpUser;
+            $mail->Password = $smtpPass;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = (int)$this->getEnvVar('SMTP_PORT', '587');
+
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
+
+            $fromEmail = $this->getEnvVar('SMTP_FROM_EMAIL', 'noreply@gearfalcon.com');
+            $mail->setFrom($fromEmail, 'GearFalcon Team');
+            $mail->addAddress($toEmail);
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Your Password Reset Code';
+            $mail->Body = $this->getPasswordResetEmailTemplate($code);
+            $mail->AltBody = "Your GearFalcon password reset code is: {$code}. This code expires in 15 minutes.";
+
+            $mail->send();
+
+        } catch (Exception $e) {
+            error_log("Email sending failed: " . $e->getMessage());
+            throw new \Exception("Failed to send password reset email. Please try again.");
+        }
+    }
+
+    private function getPasswordResetEmailTemplate(string $code): string
+    {
+        return "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+            <div style='text-align: center; margin-bottom: 30px;'>
+                <h1 style='color: #333;'>GearFalcon</h1>
+            </div>
+            <div style='background: #f8f9fa; padding: 30px; border-radius: 10px;'>
+                <h2 style='color: #333; margin-bottom: 20px;'>Password Reset Request</h2>
+                <p style='color: #666; margin-bottom: 20px;'>
+                    You requested a password reset. Use the code below to reset your password:
+                </p>
+                <div style='text-align: center; margin: 30px 0;'>
+                    <span style='font-size: 32px; font-weight: bold; background: #007bff; color: white; padding: 15px 30px; border-radius: 5px; letter-spacing: 5px; font-family: monospace;'>
+                        {$code}
+                    </span>
+                </div>
+                <p style='color: #666; font-size: 14px;'>
+                    This code will expire in 15 minutes. If you didn't request this, please ignore this email.
+                </p>
+            </div>
+            <div style='text-align: center; margin-top: 20px; color: #999; font-size: 12px;'>
+                <p>GearFalcon Team</p>
+            </div>
+        </div>";
+    }
 }
 ?>

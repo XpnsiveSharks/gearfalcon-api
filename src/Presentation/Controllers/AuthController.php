@@ -463,4 +463,82 @@ class AuthController
             return $this->jsonResponse(['error' => $e->getMessage()], 400);
         }
     }
+
+    public function forgotPassword(array $request): string
+    {
+        $email = $request['email'] ?? '';
+
+        if (empty($email)) {
+            return $this->jsonResponse(['error' => 'Email is required'], 422);
+        }
+
+        try {
+            $this->authService->forgotPassword($email);
+            return $this->jsonResponse(['success' => true, 'message' => 'Password reset code has been sent to your email.']);
+        } catch (\Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function verifyPasswordReset(array $request): string
+    {
+        $email = $request['email'] ?? '';
+        $code = $request['code'] ?? '';
+
+        if (empty($email) || empty($code)) {
+            return $this->jsonResponse(['error' => 'Email and code are required'], 422);
+        }
+
+        try {
+            $verified = $this->authService->verifyPasswordReset($email, $code);
+            if ($verified) {
+                return $this->jsonResponse(['success' => true, 'message' => 'Code verified successfully.']);
+            } else {
+                return $this->jsonResponse(['error' => 'Invalid or expired reset code.'], 400);
+            }
+        } catch (\Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function resetPassword(array $request): string
+    {
+        $email = $request['email'] ?? '';
+        $code = $request['code'] ?? '';
+        $password = $request['password'] ?? '';
+
+        if (empty($email) || empty($code) || empty($password)) {
+            return $this->jsonResponse(['error' => 'Email, code, and new password are required'], 422);
+        }
+
+        try {
+            $this->authService->resetPassword($email, $code, $password);
+            return $this->jsonResponse(['success' => true, 'message' => 'Password has been reset successfully.']);
+        } catch (\Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function updateProfile(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        if (!$user instanceof User) {
+            return $this->jsonResponse(['error' => 'User not authenticated'], 401);
+        }
+
+        $jsonInput = file_get_contents('php://input');
+        $data = json_decode($jsonInput, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->jsonResponse(['error' => 'Invalid JSON provided'], 400);
+        }
+
+        try {
+            $updatedUser = $this->authService->updateProfile($user, $data);
+            return $this->jsonResponse(['success' => true, 'message' => 'Profile updated successfully.', 'user' => $updatedUser]);
+        } catch (\Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
 }

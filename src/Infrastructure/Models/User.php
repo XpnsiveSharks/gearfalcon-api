@@ -23,6 +23,9 @@ class User extends Model
         'is_verified',
         'verification_code',
         'verification_code_expires_at',
+        'password_reset_code',
+        'password_reset_code_expires_at',
+        'password_reset_verified',
         'email_verified_at',
     ];
 

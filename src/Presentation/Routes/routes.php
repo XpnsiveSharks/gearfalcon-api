@@ -40,19 +40,14 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/forgot-password', [AuthController::class, 'forgotPassword']);
         $r->addRoute('POST', '/verify-password-reset', [AuthController::class, 'verifyPasswordReset']);
         $r->addRoute('POST', '/reset-password', [AuthController::class, 'resetPassword']);
+        $r->addRoute('PUT', '/user/update', [AuthController::class, 'updateProfile']);
     });
     
     $r->addGroup('/webhooks', function (RouteCollector $r) {
         $r->addRoute('POST', '/paymongo', [PaymentController::class, 'handleWebhook']);
     });
     
-    // Quote routes  
-    $r->addGroup('/quotes', function (RouteCollector $r) {
-        $r->addRoute('POST', '', [QuoteController::class, 'create']);                 // create a quote
-        $r->addRoute('POST', '/{id:\d+}/accept', [QuoteController::class, 'accept']); // accept a quote
-        $r->addRoute('POST', '/{id:\d+}/reject', [QuoteController::class, 'reject']); // reject a quote
-        $r->addRoute('GET', '/active', [QuoteController::class, 'getActive']);        // list all active quotes
-    });
+   
     // Customer quotes
     $r->addRoute('GET', '/customers/{id:\d+}/quotes', [QuoteController::class, 'getByCustomer']);
     
@@ -114,6 +109,15 @@ return function(RouteCollector $r) {
         $r->addRoute('DELETE', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'deleteUser']);
         $r->addRoute('PUT', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'updateUser']);
         });
+
+         // Quote routes  
+        $r->addGroup('/quotes', function (RouteCollector $r) {
+            $r->addRoute('POST', '', [QuoteController::class, 'create']);                 // create a quote
+            $r->addRoute('POST', '/{id:\d+}/accept', [QuoteController::class, 'accept']); // accept a quote
+            $r->addRoute('POST', '/{id:\d+}/reject', [QuoteController::class, 'reject']); // reject a quote
+            $r->addRoute('GET', '/active', [QuoteController::class, 'getActive']);        // list all active quotes
+        });
+
         $r->addGroup('/customers', function (RouteCollector $r){
             $r->addRoute('GET', '', [AdminController::class, 'listCustomers']);
             $r->addRoute('GET', '/address', [AdminController::class, 'listCustomerAddresses']);
