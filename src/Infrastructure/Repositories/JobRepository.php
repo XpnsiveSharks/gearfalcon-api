@@ -39,6 +39,27 @@ class JobRepository extends Repository
     }
 
     /**
+     * Find completed jobs by technician ID.
+     *
+     * @param int $technicianId
+     * @return \Illuminate\Support\Collection
+     */
+    public function findCompletedByTechnicianId(int $technicianId)
+    {
+        return $this->model
+            ->where('status', 'completed')
+            ->whereHas('assignments', function ($query) use ($technicianId) { // Check for assignments...
+                $query->where('technician_id', $technicianId)->withTrashed(); // ...including soft-deleted ones.
+                $query->where('technician_id', $technicianId);
+            })
+            ->with([
+                'customer.user',
+                'service',
+            ])
+            ->get();
+    }
+
+    /**
      * Find jobs by status
      */
     public function findByStatus(string $status)

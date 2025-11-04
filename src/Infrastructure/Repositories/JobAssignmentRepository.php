@@ -79,7 +79,8 @@ class JobAssignmentRepository extends Repository
         return $this->model->with([
             'job.customer.user', 
             'job.customerAddress', 
-            'technician.user'
+            'technician.user',
+            'job.service'
         ])->get();
     }
 }

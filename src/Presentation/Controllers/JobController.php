@@ -142,7 +142,7 @@ class JobController
         }
 
         try {
-            $job = $this->jobService->updateJobStatus($id, 'cancelled');
+            $job = $this->jobService->cancelJob((int)$id);
 
             return $this->jsonResponse([
                 'success' => true,
@@ -305,19 +305,26 @@ class JobController
 
         try {
             // 2. Call the service to get all taken jobs (assignments)
-            $takenJobs = $this->jobService->getTakenJobs();
+            $jobs = $this->jobService->getTakenJobs();
 
-            if ($takenJobs->isEmpty()) {
+            if ($jobs->isEmpty()) {
                 return $this->jsonResponse(['assignments' => []]);
             }
 
-            return $this->jsonResponse(['assignments' => $takenJobs->toArray()]);
+            $formattedJobs = $jobs->map(function ($job) {
+                $jobData = $job->toArray();
+                if (isset($job->service)) {
+                    $jobData['service_name'] = $job->service->name;
+                }
+                return $jobData;
+            });
+
+            return $this->jsonResponse(['assignments' => $formattedJobs->toArray()]);
         } catch (Exception $e) {
             // Handle potential errors
             return $this->jsonResponse(['error' => 'Could not retrieve taken jobs: ' . $e->getMessage()], 500);
         }
     }
-
     public function getTechnicianForJob(array $request): string
     {
         $jobId = $request['id'] ?? null;
@@ -342,11 +349,149 @@ class JobController
                     'user_id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'phone' => $user->phone,
+                    'contact' => $technician->contact,
                 ]
             ]);
         } catch (Exception $e) {
             return $this->jsonResponse(['error' => 'Could not retrieve technician for the job: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function serviceHistory(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        // 1. Authenticate and authorize user as a technician
+        if (!$user instanceof User || $user->role !== 'technician' || !$user->technician) {
+            return $this->jsonResponse(['error' => 'User not authenticated or not a technician'], 401);
+        }
+
+        $technicianId = $user->technician->id;
+
+        try {
+            // 2. Call the service to get the service history
+            $jobs = $this->jobService->getCompletedJobsForTechnician($technicianId);
+
+            if ($jobs->isEmpty()) {
+                return $this->jsonResponse(['jobs' => []]);
+            }
+
+            return $this->jsonResponse(['jobs' => $jobs->toArray()]);
+        } catch (Exception $e) {
+            // Handle potential errors
+            return $this->jsonResponse(['error' => 'Could not retrieve service history: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Allows an admin to manually assign a job to a technician.
+     *
+     * @param array $request The request data, including job ID from URL and technician ID from body.
+     * @return string JSON response.
+     */
+    public function assignJob(array $request): string
+    {
+        $user = $request['user'] ?? null;
+        $jobId = $request['job_id'] ?? null;
+
+        // 1. Authenticate and authorize user as an admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        // 2. Validate job ID from URL
+        if (!$jobId) {
+            return $this->jsonResponse(['error' => 'Job ID is missing from the request'], 400);
+        }
+
+        // 3. Get technician ID from URL
+        $technicianId = $request['technician_id'] ?? null;        if (!$technicianId) {
+            return $this->jsonResponse(['error' => 'Technician ID is required in the request body'], 400);
+        }
+
+        try {
+            $job = $this->jobService->assignTechnician((int)$jobId, (int)$technicianId);
+            return $this->jsonResponse(['success' => true, 'message' => 'Job assigned successfully.', 'job' => $job->toArray()], 200);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Retrieves all jobs with the status 'cancelled'.
+     * This is an admin-only endpoint.
+     *
+     * @param array $request The request data, including the authenticated user.
+     * @return string JSON response.
+     */
+    public function getCancelledJobs(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        // 1. Ensure the user is an authenticated admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            $cancelledJobs = $this->jobService->getJobsByStatus('cancelled');
+            return $this->jsonResponse(['jobs' => $cancelledJobs->toArray()]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve cancelled jobs: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Updates a job's status to 'refunded'.
+     * This is an admin-only endpoint.
+     *
+     * @param array $request The request data, including job ID and authenticated user.
+     * @return string JSON response.
+     */
+    public function refund(array $request): string
+    {
+        $user = $request['user'] ?? null;
+        $jobId = $request['job_id'] ?? null;
+
+        // 1. Authenticate and authorize user as an admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        // 2. Validate job ID from URL
+        if (!$jobId) {
+            return $this->jsonResponse(['error' => 'Job ID is missing from the request'], 400);
+        }
+
+        try {
+            $job = $this->jobService->refundJob((int)$jobId);
+            return $this->jsonResponse(['success' => true, 'message' => 'Job status updated to refunded successfully.', 'job' => $job->toArray()], 200);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Retrieves all jobs with the status 'refunded'.
+     * This is an admin-only endpoint.
+     *
+     * @param array $request The request data, including the authenticated user.
+     * @return string JSON response.
+     */
+    public function getRefunded(array $request): string
+    {
+        $user = $request['user'] ?? null;
+
+        // 1. Ensure the user is an authenticated admin
+        if (!$user instanceof User || $user->role !== 'admin') {
+            return $this->jsonResponse(['error' => 'User not authenticated or not an admin'], 401);
+        }
+
+        try {
+            $refundedJobs = $this->jobService->getJobsByStatus('cancelled');
+            return $this->jsonResponse(['jobs' => $refundedJobs->toArray()]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['error' => 'Could not retrieve refunded jobs: ' . $e->getMessage()], 500);
         }
     }
 }

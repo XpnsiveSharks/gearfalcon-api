@@ -22,13 +22,13 @@ class UserController
      */
     public function promote(array $request): string
     {
-        $userId = $request['user_id'] ?? null;
+        $userId = $request['id'] ?? null;
         $technicianData = [
             'experience_years' => $request['experience_years'] ?? null,
         ];
 
         if (!$userId) {
-            return json_encode(['error' => 'user_id is required']);
+            return json_encode(['error' => 'User ID is required']);
         }
 
         try {

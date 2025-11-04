@@ -31,6 +31,16 @@ class UserRepository extends Repository
         return parent::create($data);
     }
     /**
+     * Find all users.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function findAll(): \Illuminate\Support\Collection
+    {
+        return $this->model->all();
+    }
+
+    /**
      * Find a user by email.
      *
      * @param string $email

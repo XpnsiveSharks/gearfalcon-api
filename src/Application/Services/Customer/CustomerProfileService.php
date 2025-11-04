@@ -66,18 +66,13 @@ class CustomerProfileService
         if (!$isAdmin && empty($data['old_password'])) {
             throw new \InvalidArgumentException('Old password is required.');
         }
-        if (empty($data['new_password']) || empty($data['new_password_confirmation'])) {
-            throw new \InvalidArgumentException('Old password, new password, and confirmation are required.');
+        if (empty($data['new_password'])) {
+            throw new \InvalidArgumentException('New password is required.');
         }
 
         // Verify old password, but skip this check if an admin is making the change
         if (!$isAdmin && !password_verify($data['old_password'], $user->password)) {
             throw new \Exception('The old password does not match our records.');
-        }
-
-        // Verify new password confirmation
-        if ($data['new_password'] !== $data['new_password_confirmation']) {
-            throw new \Exception('The new password confirmation does not match.');
         }
 
         // Update the user's password

@@ -45,10 +45,14 @@ class TechnicianController
             return $this->jsonResponse(['error' => 'Forbidden. You do not have permission to update this profile.'], 403);
         }
 
+        $jsonInput = file_get_contents('php://input');
+        $data = json_decode($jsonInput, true);
+
         $updateData = [
-            'specialization' => $request['specialization'] ?? null,
-            'certification' => $request['certification'] ?? null,
-            'experience_years' => $request['experience_years'] ?? null,
+            'contact' => $data['contact'] ?? null,
+            'specialization' => $data['specialization'] ?? null,
+            'certification' => $data['certification'] ?? null,
+            'experience_years' => $data['experience_years'] ?? null,
         ];
 
         $technician = $this->technicianService->updateTechnician($technicianUserIdToUpdate, array_filter($updateData, fn($value) => $value !== null));

@@ -11,7 +11,7 @@ class Technician extends Model
     protected $table = 'technicians';
 
     protected $fillable = [
-        'user_id', 'specialization', 'certification', 'experience_years'
+        'user_id', 'contact', 'specialization', 'certification', 'experience_years'
     ];
 
     public function user()

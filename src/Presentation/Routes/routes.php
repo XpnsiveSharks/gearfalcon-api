@@ -37,7 +37,9 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/verify-email', [AuthController::class, 'verifyEmail']);
         $r->addRoute('POST', '/resend-verification', [AuthController::class, 'resendVerificationCode']);
         $r->addRoute('GET', '/customer-info', [AuthController::class, 'getCustomerInfo']);
-        $r->addRoute('POST', '/forgot-password', [AuthController::class, 'forgotPassword']); // TODO
+        $r->addRoute('POST', '/forgot-password', [AuthController::class, 'forgotPassword']);
+        $r->addRoute('POST', '/verify-password-reset', [AuthController::class, 'verifyPasswordReset']);
+        $r->addRoute('POST', '/reset-password', [AuthController::class, 'resetPassword']);
     });
     
     $r->addGroup('/webhooks', function (RouteCollector $r) {
@@ -76,14 +78,12 @@ return function(RouteCollector $r) {
             $r->addRoute('POST', '/checkout', [PaymentController::class, 'createPaymentSource']);
         });
         
-        //Cart Status
-        $r->addRoute('PUT', '/carts',[CartController::class, 'changeStatus']); // eto need ko gawin sa admin
-        
         //Customer Jobs
         $r->addGroup('/jobs', function (RouteCollector $r) {
             $r->addRoute('POST', '', [JobController::class, 'createJob']); // create a job
             $r->addRoute('GET', '/{id:\d+}', [JobController::class, 'getJobsByCustomer']); // get jobs by customer
             $r->addRoute('GET', '/{id:\d+}/technician', [JobController::class, 'getTechnicianForJob']); // get technician for a job
+            $r->addRoute('PUT', '/{id:\d+}/cancel', [JobController::class, 'cancelJob']);
             $r->addRoute('PUT', '/{id:\d+}/complete', [JobController::class, 'completeJob']); // Mark job as completed by customer
         });
     });
@@ -97,9 +97,10 @@ return function(RouteCollector $r) {
 
     // Technician routes
     $r->addGroup('/technicians', function (RouteCollector $r) {
-        $r->addRoute('PUT','/{id:[0-9a-fAF]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[TechnicianController::class, 'updateTechnician']);
+        $r->addRoute('PUT','/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[TechnicianController::class, 'updateTechnician']);
         $r->addRoute('POST', '/jobs/{id:\d+}/claim', [JobController::class, 'claimJob']);
         $r->addRoute('GET', '/jobs/assigned', [JobController::class, 'assignedJobs']); // New route for assigned jobs
+        $r->addRoute('GET', '/jobs/service-history', [JobController::class, 'serviceHistory']);
     });
 
 
@@ -107,20 +108,31 @@ return function(RouteCollector $r) {
     // Admin routes
     $r->addGroup('/admin', function (RouteCollector $r) {
         // Customer routes
-        $r->addRoute('GET', '/customers', [AdminController::class, 'listCustomers']);
-        $r->addRoute('GET', '/customers/address', [AdminController::class, 'listCustomerAddresses']);
-        $r->addRoute('GET', '/customers/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'getCustomerDetails']);
+        $r->addGroup('/users', function (RouteCollector $r) {   
+        $r->addRoute('POST', '', [AdminController::class, 'makeUser']);
+        $r->addRoute('GET', '', [AdminController::class, 'listUsers']);
+        $r->addRoute('DELETE', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'deleteUser']);
+        $r->addRoute('PUT', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'updateUser']);
+        });
+        $r->addGroup('/customers', function (RouteCollector $r){
+            $r->addRoute('GET', '', [AdminController::class, 'listCustomers']);
+            $r->addRoute('GET', '/address', [AdminController::class, 'listCustomerAddresses']);
+            $r->addRoute('GET', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'getCustomerDetails']);
+            $r->addRoute('PUT', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'updateCustomer']);
+            $r->addRoute('PUT', '/carts', [CartController::class, 'changeStatus']);
+        });
 
 
         // Technician routes
-        $r->addRoute('POST', '/technicians/promote', [UserController::class, 'promote']);
-        $r->addRoute('DELETE','/technicians/demote/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[UserController::class, 'demote']);
-        $r->addRoute('GET', '/technicians/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'getTechnicianDetails']);
-        $r->addRoute('GET', '/technicians', [AdminController::class, 'listTechnicians']);
+        $r->addGroup('/technicians', function (RouteCollector $r) {
+            $r->addRoute('PUT', '/promote/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [UserController::class, 'promote']);
+            $r->addRoute('DELETE','/demote/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}',[UserController::class, 'demote']);
+            $r->addRoute('GET', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'getTechnicianDetails']);
+            $r->addRoute('PUT', '/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', [AdminController::class, 'updateTechnician']);
+            $r->addRoute('GET', '', [AdminController::class, 'listTechnicians']);
+        });
         
         // Admin-only routes to manage technician skills
-        $r->addRoute('POST', '/technicians/{id:\d+}/skills', [AdminController::class, 'assignSkill']);
-        $r->addRoute('DELETE', '/technicians/{technician_id:\d+}/skills/{skill_id:\d+}', [AdminController::class, 'removeSkill']);
         
         // Admin-only routes to manage master skills list
         $r->addGroup('/skills', function (RouteCollector $r) {
@@ -150,7 +162,11 @@ return function(RouteCollector $r) {
             $r->addRoute('GET', '/available', [JobController::class, 'getAvailableJobs']); // New route for available jobs
             $r->addRoute('GET', '/emergency', [JobController::class, 'getEmergencyJobs']); // list emergency jobs
             $r->addRoute('GET', '/taken', [JobController::class, 'TakenJobs']); // New route for available jobs
-            $r->addRoute('POST', '/{id:\d+}/assign', [JobController::class, 'assignJob']); // assign job to technician  .. TODO
+            $r->addRoute('GET', '/cancelled', [JobController::class, 'getCancelledJobs']); // Get all cancelled jobs
+            $r->addRoute('PUT', '/{job_id:\d+}/assign/{technician_id:\d+}', [JobController::class, 'assignJob']); // assign job to technician
+            $r->addRoute('GET', '/refunded', [JobController::class, 'getRefunded']); // Get all refunded jobs
+            $r->addRoute('POST', '/refund', [JobController::class, 'refund']);
+            $r->addRoute('PUT', '/{job_id:\d+}/unassign', [JobController::class, 'unassignJob']); // unassign job from technician
         });
     });
 };

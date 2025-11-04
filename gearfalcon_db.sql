@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gearfalcon_db_dev CHARACTER SET utf8mb4 COLLATE ut
 USE gearfalcon_db_dev;
 
 -- Step 3: Now create your tables
--- USERS (Updated with email verification fields)
+-- USERS (Updated with email verification and password reset fields)
 CREATE TABLE users (
   id CHAR(36) PRIMARY KEY, -- string user id (UUID/custom)
   name VARCHAR(255) NOT NULL,
@@ -16,6 +16,9 @@ CREATE TABLE users (
   is_verified TINYINT(1) NOT NULL DEFAULT 0,
   verification_code CHAR(4),
   verification_code_expires_at TIMESTAMP NULL,
+  password_reset_code CHAR(6) NULL,
+  password_reset_code_expires_at TIMESTAMP NULL,
+  password_reset_verified TINYINT(1) DEFAULT 0,
   email_verified_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -56,6 +59,7 @@ CREATE TABLE customer_addresses (
 CREATE TABLE technicians (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id CHAR(36) UNIQUE, -- FK → users.id
+  contact VARCHAR(50) NULL,
   specialization VARCHAR(255),
   certification TEXT,
   experience_years INT,
@@ -129,7 +133,7 @@ CREATE TABLE cart_items (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   cart_id BIGINT, -- FK → carts.id
   service_id BIGINT, -- FK → services.id
-  quantity INT DEFAULT 1,
+  quantity INT DEFAULT 1,e
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -138,17 +142,18 @@ CREATE TABLE cart_items (
   FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
 );
 
--- JOBS
+-- JOBS (Updated with review column)
 CREATE TABLE jobs (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   customer_id BIGINT, -- FK → customers.id
   customer_address_id BIGINT, -- FK → customer_addresses.id
   service_id BIGINT, -- FK → services.id
   cart_id BIGINT NULL, -- FK → carts.id
-  status ENUM('pending_admin_assignment','available_for_claim','claimed','in_progress','completed','cancelled') DEFAULT 'available_for_claim',
+  status ENUM('pending_admin_assignment','available_for_claim','claimed','in_progress','completed','cancelled', 'refunded') DEFAULT 'available_for_claim',
   scheduled_date DATE,
   completed_date DATE,
   notes TEXT,
+  review TINYINT NULL CHECK (review >= 1 AND review <= 10), -- Rating from 1-10
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
@@ -188,6 +193,21 @@ CREATE TABLE quotes (
   FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE SET NULL
 );
 
+-- REFUNDS TABLE
+CREATE TABLE refunds (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  job_id BIGINT NOT NULL, -- FK → jobs.id
+  image MEDIUMBLOB, -- Stores refund proof image (up to ~16MB)
+  image_filename VARCHAR(255), -- Original filename
+  image_mime_type VARCHAR(100), -- e.g., 'image/jpeg', 'image/png'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
+  FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+);
+
+
 -- Add indexes for better performance
 CREATE INDEX idx_users_verification_code ON users(verification_code);
 CREATE INDEX idx_users_email_verified ON users(email, is_verified);
+CREATE INDEX idx_users_password_reset_code ON users(password_reset_code);
+CREATE INDEX idx_refunds_job_id ON refunds(job_id);

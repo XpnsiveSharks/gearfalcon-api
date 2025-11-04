@@ -73,12 +73,18 @@ class JobService
                 throw new Exception("Job not found.");
             }
 
+            // Update the job status to 'claimed'
+            $this->jobRepository->update($jobId, ['status' => 'claimed']);
+
             // Create a new assignment with the job ID, technician ID, and current timestamp
-            return $this->jobAssignmentRepository->create([
+            $this->jobAssignmentRepository->create([
                 'job_id' => $jobId,
                 'technician_id' => $technicianId,
                 'assigned_at' => Carbon::now(),
             ]);
+
+            // Return the updated job
+            return $this->jobRepository->findById($jobId);
         });
     }
 
@@ -226,6 +232,7 @@ class JobService
 
     /**
      * Gets all jobs that are scheduled within the next two days and are not completed or cancelled.
+     * Gets all jobs that are scheduled for today and are not completed or cancelled.
      *
      * @return \Illuminate\Support\Collection A list of emergency jobs.
      */
@@ -234,8 +241,8 @@ class JobService
         $twoDaysFromNow = Carbon::now()->addDays(2);
  
         return Job::where('scheduled_date', '<=', $twoDaysFromNow)
-            ->where('scheduled_date', '>=', Carbon::now())
-            ->whereNotIn('status', ['completed', 'cancelled'])
+            // ->where('scheduled_date', '>=', Carbon::now())
+            ->whereNotIn('status', ['completed', 'cancelled', 'refunded', 'claimed'])
             ->with(['customer.user', 'service', 'customerAddress', 'assignments.technician.user'])
             ->get();
     }
@@ -271,5 +278,78 @@ class JobService
     public function getTechnicianForJob(int $jobId)
     {
         return $this->jobAssignmentRepository->findTechnicianByJobId($jobId);
+    }
+
+    /**
+     * Cancels a job and its associated cart.
+     *
+     * @param int $jobId The ID of the job to cancel.
+     * @return Job The updated job record.
+     * @throws Exception If the job is not found or cannot be cancelled.
+     */
+    public function cancelJob(int $jobId): Job
+    {
+        return DB::connection()->transaction(function () use ($jobId) {
+            $job = $this->jobRepository->findById($jobId);
+
+            if (!$job) {
+                throw new Exception("Job not found.");
+            }
+
+            // Prevent cancellation of completed jobs
+            if ($job->status === 'completed') {
+                throw new Exception("Completed jobs cannot be cancelled.");
+            }
+
+            // Update the job status to 'cancelled'
+            return $this->jobRepository->update($jobId, ['status' => 'cancelled']);
+        });
+    }
+
+    /**
+     * Gets the service history (completed jobs) for a specific technician.
+     *
+     * @param int $technicianId The ID of the technician.
+     * @return \Illuminate\Support\Collection A list of completed jobs for the technician.
+     */
+    public function getCompletedJobsForTechnician(int $technicianId)
+    {
+        return $this->jobRepository->findCompletedByTechnicianId($technicianId);
+    }
+
+    /**
+     * Gets all jobs with a specific status.
+     *
+     * @param string $status The status to filter by.
+     * @return \Illuminate\Support\Collection A list of jobs with the given status.
+     */
+    public function getJobsByStatus(string $status)
+    {
+        return $this->jobRepository->findByStatus($status);
+    }
+
+    /**
+     * Updates a job's status to 'refunded'.
+     *
+     * @param int $jobId The ID of the job to refund.
+     * @return Job The updated job record.
+     * @throws Exception If the job is not found or cannot be refunded.
+     */
+    public function refundJob(int $jobId): Job
+    {
+        return DB::connection()->transaction(function () use ($jobId) {
+            $job = $this->jobRepository->findById($jobId);
+
+            if (!$job) {
+                throw new Exception("Job not found.");
+            }
+
+            // Prevent refunding a job that is already refunded.
+            if ($job->status === 'refunded') {
+                throw new Exception("This job has already been refunded.");
+            }
+
+            return $this->jobRepository->update($jobId, ['status' => 'refunded']);
+        });
     }
 }

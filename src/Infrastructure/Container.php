@@ -31,6 +31,7 @@ use App\Infrastructure\Repositories\JobAssignmentRepository; // Added for JobSer
 use App\Infrastructure\Repositories\ServiceCategoryRepository;
 use App\Infrastructure\Repositories\SkillRepository;
 use App\Infrastructure\Repositories\ServiceRepository;
+use App\Infrastructure\Repositories\RefundRepository;
 
 // Services
 use App\Application\Services\UserRegistrationService;
@@ -47,6 +48,8 @@ use App\Application\Admin\Services\ServiceService;
 use App\Application\Admin\Services\AdminSkillService;
 use App\Application\Services\Customer\CustomerProfileService;
 use App\Application\Technician\Services\TechnicianService;
+use App\Application\Customer\Services\RefundService;
+
 
 // Controllers
 use App\Presentation\Controllers\AuthController;
@@ -96,6 +99,8 @@ $serviceCategoryRepository = new ServiceCategoryRepository(new ServiceCategory);
 $skillRepository = new SkillRepository(new Skill);
 $serviceRepository = new ServiceRepository(new Service);
 
+// Initialize PHPMailer
+
 // Housekeeping: delete unverified users whose verification expired (>5 minutes)
 try {
     $deletedCount = $userRepository->deleteExpiredUnverifiedUsers(5);
@@ -132,8 +137,8 @@ $authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
 $authController = new AuthController($authService, $userRegistrationService, $emailVerificationService);
 $cartController = new CartController($cartService);
 $quoteController = new QuoteController($quoteService);
-$jobController = new JobController($jobService, $cartService); // Initialized JobController
-$adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService, $customerRepository, $customerAddressRepository, $technicianService);
+$jobController = new JobController($jobService, $cartService);
+$adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService, $customerRepository, $customerAddressRepository, $technicianService, $customerProfileService, $authService, $userRepository);
 $catalogController = new CatalogController($serviceCatalogService);
 $userController = new UserController($promotionService, $userRegistrationService);
 $customerController = new CustomerController($customerProfileService);

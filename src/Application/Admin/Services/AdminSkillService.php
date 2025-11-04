@@ -169,4 +169,35 @@ class AdminSkillService
 
         return $technician->fresh('skills'); // Reload with updated skills
     }
+
+    /**
+     * Syncs skills for a technician.
+     *
+     * @param int $technicianId
+     * @param array $skills
+     * @return Technician
+     * @throws Exception
+     */
+    public function syncTechnicianSkills(int $technicianId, array $skills): Technician
+    {
+        $technician = $this->technicianRepository->findById($technicianId);
+        if (!$technician) {
+            throw new Exception('Technician not found.');
+        }
+
+        $syncData = [];
+        foreach ($skills as $skill) {
+            if (!isset($skill['skill_id']) || !isset($skill['proficiency'])) {
+                throw new Exception("Each skill must have a 'skill_id' and 'proficiency'.");
+            }
+            // Ensure proficiency is one of the allowed values
+            if (!in_array($skill['proficiency'], ['beginner', 'intermediate', 'expert'])) {
+                throw new Exception("Proficiency must be one of: beginner, intermediate, expert.");
+            }
+            $syncData[$skill['skill_id']] = ['proficiency' => $skill['proficiency']];
+        }
+
+        $technician->skills()->sync($syncData);
+        return $technician->fresh('skills');
+    }
 }
