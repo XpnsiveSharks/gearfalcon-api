@@ -148,6 +148,7 @@ CREATE TABLE jobs (
   customer_id BIGINT, -- FK → customers.id
   customer_address_id BIGINT, -- FK → customer_addresses.id
   service_id BIGINT, -- FK → services.id
+  price DECIMAL(10, 2),
   cart_id BIGINT NULL, -- FK → carts.id
   status ENUM('pending_admin_assignment','available_for_claim','claimed','in_progress','completed','cancelled', 'refunded') DEFAULT 'available_for_claim',
   scheduled_date DATE,
@@ -176,38 +177,21 @@ CREATE TABLE job_assignments (
   FOREIGN KEY (technician_id) REFERENCES technicians(id) ON DELETE CASCADE
 );
 
--- QUOTES
-CREATE TABLE quotes (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  customer_id BIGINT NOT NULL,
-  customer_address_id BIGINT NOT NULL,
-  cart_id BIGINT NULL,
-  total_amount DECIMAL(10,2) NOT NULL,
-  status ENUM('draft','sent','accepted','declined','expired') DEFAULT 'draft',
-  valid_until DATE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP NULL,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (customer_address_id) REFERENCES customer_addresses(id) ON DELETE CASCADE,
-  FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE SET NULL
-);
-
 -- REFUNDS TABLE
-CREATE TABLE refunds (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  job_id BIGINT NOT NULL, -- FK → jobs.id
-  image MEDIUMBLOB, -- Stores refund proof image (up to ~16MB)
-  image_filename VARCHAR(255), -- Original filename
-  image_mime_type VARCHAR(100), -- e.g., 'image/jpeg', 'image/png'
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP NULL,
-  FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
-);
+-- CREATE TABLE refunds (
+--   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+--   job_id BIGINT NOT NULL, -- FK → jobs.id
+--   image MEDIUMBLOB, -- Stores refund proof image (up to ~16MB)
+--   image_filename VARCHAR(255), -- Original filename
+--   image_mime_type VARCHAR(100), -- e.g., 'image/jpeg', 'image/png'
+--   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--   deleted_at TIMESTAMP NULL,
+--   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+-- );
 
 
 -- Add indexes for better performance
 CREATE INDEX idx_users_verification_code ON users(verification_code);
 CREATE INDEX idx_users_email_verified ON users(email, is_verified);
 CREATE INDEX idx_users_password_reset_code ON users(password_reset_code);
-CREATE INDEX idx_refunds_job_id ON refunds(job_id);
+-- CREATE INDEX idx_refunds_job_id ON refunds(job_id);

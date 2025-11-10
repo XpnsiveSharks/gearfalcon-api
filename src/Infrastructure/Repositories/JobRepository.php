@@ -145,11 +145,10 @@ class JobRepository extends Repository
             ->avg('review');
     }
 
-    public function getCompletedJobsWithServices()
+    public function getCompletedJobs()
     {
         return $this->model
             ->where('status', 'completed')
-            ->with('service')
             ->get();
     }
 

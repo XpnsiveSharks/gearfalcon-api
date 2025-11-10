@@ -135,6 +135,9 @@ class AuthController
     public function register(array $request): string
     {
         try {
+            // Ensure role is always 'customer' for public registration
+            $request['role'] = 'customer';
+            
             // Step 1: Create user account (unverified)
             $user = $this->userRegistrationService->registerUser($request);
 
@@ -148,7 +151,6 @@ class AuthController
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $user->role,
                     'is_verified' => false
                 ],
                 'next_step' => 'verify_email'

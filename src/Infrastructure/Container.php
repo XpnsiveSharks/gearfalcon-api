@@ -137,7 +137,7 @@ $authMiddleware = new AuthMiddleware($_ENV['JWT_SECRET'] ?? '');
 $authController = new AuthController($authService, $userRegistrationService, $emailVerificationService);
 $cartController = new CartController($cartService);
 
-$jobController = new JobController($jobService, $cartService);
+$jobController = new JobController($jobService, $cartService, $serviceRepository);
 $adminController = new AdminController($serviceCategoryService, $serviceService, $promotionService, $adminSkillService, $customerRepository, $customerAddressRepository, $technicianService, $customerProfileService, $authService, $userRepository);
 $catalogController = new CatalogController($serviceCatalogService);
 $userController = new UserController($promotionService, $userRegistrationService);
@@ -149,7 +149,8 @@ $technicianController = new TechnicianController($technicianService);
 $paymentController = new PaymentController(
     $cartService,
     $jobService,
-    $customerAddressRepository
+    $customerAddressRepository,
+    $serviceRepository
 );
 // ⬆️ END ADDED SECTION ⬆️
 

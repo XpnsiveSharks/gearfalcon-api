@@ -397,14 +397,7 @@ class JobService
 
     public function getTotalRevenue(): float
     {
-        $completedJobs = $this->jobRepository->getCompletedJobsWithServices();
-        $totalRevenue = 0;
-        foreach ($completedJobs as $job) {
-            if ($job->service && $job->service->base_price) {
-                $totalRevenue += $job->service->base_price;
-            }
-        }
-        return $totalRevenue;
+        return (float) $this->jobRepository->getCompletedJobs()->sum('price');
     }
 
     public function getRecentJobs(int $limit = 50)

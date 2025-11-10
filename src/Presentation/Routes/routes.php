@@ -14,19 +14,9 @@ use FastRoute\RouteCollector;
 return function(RouteCollector $r) {
     // Test home route
     $r->addRoute('GET', '/', function() {
-        echo "Welcome to GearFalcon API 🚀";
+        echo '<a href="https://gearfalcon-frontend.vercel.app/">FRONT END</a>';
     });
     
-    // Health check route
-    $r->addRoute('GET', '/health', function() {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'healthy',
-            'timestamp' => date('c'),
-            'version' => '1.0.0',
-            'environment' => getenv('APP_ENV') ?: 'development'
-        ]);
-    });
     
     // Auth routes
     $r->addGroup('/auth', function (RouteCollector $r) {

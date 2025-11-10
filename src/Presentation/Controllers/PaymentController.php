@@ -16,6 +16,7 @@ use \Exception;
 use App\Application\Customer\Services\CartService;
 use App\Application\Customer\Services\JobService;
 use App\Infrastructure\Repositories\CustomerAddressRepository;
+use App\Infrastructure\Repositories\ServiceRepository;
 use App\Infrastructure\Models\User;
 
 class PaymentController
@@ -23,15 +24,18 @@ class PaymentController
     private CartService $cartService;
     private JobService $jobService;
     private CustomerAddressRepository $customerAddressRepo;
+    private ServiceRepository $serviceRepository;
 
     public function __construct(
         CartService $cartService,
         JobService $jobService,
-        CustomerAddressRepository $customerAddressRepo
+        CustomerAddressRepository $customerAddressRepo,
+        ServiceRepository $serviceRepository
     ) {
         $this->cartService = $cartService;
         $this->jobService = $jobService;
         $this->customerAddressRepo = $customerAddressRepo;
+        $this->serviceRepository = $serviceRepository;
     }
 
     private function jsonResponse(array $data, int $statusCode = 200): string
@@ -263,11 +267,19 @@ class PaymentController
                             // Create jobs for each cart item
                             $jobsCreated = 0;
                             foreach ($cartItems as $item) {
+                                // Fetch the service to get its price
+                                $service = $this->serviceRepository->findById($item->service_id);
+                                if (!$service) {
+                                    // If a service in the cart doesn't exist, skip it or handle the error
+                                    continue;
+                                }
+
                                 for ($i = 0; $i < $item->quantity; $i++) {
                                     $jobData = [
                                         'customer_id'         => $customerId,
                                         'customer_address_id' => $addressId,
                                         'service_id'          => $item->service_id,
+                                        'price'               => $service->base_price, // Set the price here
                                         'cart_id'             => $cartModel['id'],
                                         'status'              => 'available_for_claim',
                                         'notes'               => $item->notes,

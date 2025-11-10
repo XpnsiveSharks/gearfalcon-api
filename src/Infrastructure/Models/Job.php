@@ -24,6 +24,7 @@ class Job extends Model
         'customer_id',
         'customer_address_id',
         'service_id',
+        'price',
         'cart_id',
         'status',
         'scheduled_date',

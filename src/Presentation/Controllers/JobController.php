@@ -5,6 +5,7 @@ namespace App\Presentation\Controllers;
 use App\Application\Customer\Services\CartService;
 use Illuminate\Support\Carbon;
 use App\Application\Customer\Services\JobService;
+use App\Infrastructure\Repositories\ServiceRepository;
 use App\Infrastructure\Models\User;
 use Exception;
 
@@ -12,11 +13,13 @@ class JobController
 {
     private JobService $jobService;
     private CartService $cartService;
+    private ServiceRepository $serviceRepository;
 
-    public function __construct(JobService $jobService, CartService $cartService)
+    public function __construct(JobService $jobService, CartService $cartService, ServiceRepository $serviceRepository)
     {
         $this->jobService = $jobService;
         $this->cartService = $cartService;
+        $this->serviceRepository = $serviceRepository;
     }
 
     private function jsonResponse(array $data, int $statusCode = 200): string
@@ -54,11 +57,19 @@ class JobController
 
                 $jobsCreated = 0;
                 foreach ($cartItems as $item) {
+                    // Fetch the service to get its price
+                    $service = $this->serviceRepository->findById($item->service_id);
+                    if (!$service) {
+                        // If a service in the cart doesn't exist, skip it or handle the error
+                        continue; 
+                    }
+
                     for ($i = 0; $i < $item->quantity; $i++) {
                         $jobData = [
                             'customer_id'         => $user->customer->id,
                             'customer_address_id' => $data['customer_address_id'],
                             'service_id'          => $item->service_id,
+                            'price'               => $service->base_price, // Set the price here
                             'cart_id'             => $cartId,
                             'status'              => 'available_for_claim',
                             'notes'               => $item->notes,
@@ -85,11 +96,18 @@ class JobController
                 return $this->jsonResponse(['error' => 'Missing required fields: customer_address_id and service_id'], 400);
             }
 
+            // Fetch the service to get its price
+            $service = $this->serviceRepository->findById($data['service_id']);
+            if (!$service) {
+                return $this->jsonResponse(['error' => 'Service not found.'], 404);
+            }
+
             $isPriority = $data['is_priority'] ?? false;
 
             $jobData = [
                 'customer_address_id' => $data['customer_address_id'],
                 'service_id' => $data['service_id'],
+                'price' => $service->base_price, // Set the price here
                 'cart_id' => null,
                 'notes' => $data['notes'] ?? null,
                 'scheduled_date' => $data['scheduled_date'] ?? Carbon::now()->toDateString(),
@@ -169,6 +187,15 @@ class JobController
         $technicianId = $user->technician->id;
 
         try {
+            // Check the number of active jobs for the technician
+            $activeJobs = $this->jobService->getAssignedJobsForTechnician($technicianId);
+            if ($activeJobs->count() >= 5) {
+                return $this->jsonResponse([
+                    'error' => 'Sorry but you have reach the maximum amount of jobs, please complete the jobs assigned first.'
+                ], 403); // 403 Forbidden is appropriate here
+            }
+
+
             $job = $this->jobService->claimJob((int)$jobId, $technicianId);
 
             if (!$job) {
